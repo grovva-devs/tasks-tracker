@@ -8,7 +8,8 @@ dist
 *.tsbuildinfo
 coverage
 .DS_Store
-.turbo
-drizzle/*.sql  # migrations — track these in git
-drizzle/meta/  # meta — track this too
-!drizzle/       # but track the drizzle folder with migrations
+
+# Drizzle migrations — track in git
+drizzle/*.sql
+drizzle/meta/
+!drizzle/

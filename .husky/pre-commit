@@ -1,0 +1,72 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Checking critical rule violations..."
+
+# Rule: db-prevent-sql-injection — BLOCK sql.raw()
+if grep -rn "sql\.raw(" src/ --include="*.ts" 2>/dev/null; then
+  echo ""
+  echo "❌ BLOCKED: Found sql.raw() in source code"
+  echo "   sql.raw() with user input enables SQL injection attacks."
+  echo "   Use sql template tag or Drizzle query builder instead."
+  echo "   See: rules/db-prevent-sql-injection.md"
+  echo ""
+  exit 1
+fi
+
+# Rule: db-prevent-sql-injection — BLOCK string interpolation in sql tagged template
+if grep -rn 'sql`.*\${' src/ --include="*.ts" 2>/dev/null | grep -v "sql\`\[^\.]*\${" | grep -v "// " | grep "\.${" 2>/dev/null; then
+  echo ""
+  echo "⚠️  WARNING: Possible string interpolation in sql template"
+  echo "   Drizzle sql template tag auto-parameterizes when you use ${} INSIDE the template."
+  echo "   But be careful: ${tableName} is for table refs, ${userInput} is for values."
+  echo "   See: rules/db-prevent-sql-injection.md"
+  echo ""
+fi
+
+# Rule: db-select-columns — WARN on .select().from() without columns
+if grep -rn "\.select()\.from(" src/ --include="*.ts" 2>/dev/null; then
+  echo ""
+  echo "⚠️  WARNING: Found .select().from() — selects ALL columns"
+  echo "   Specify columns explicitly: .select({ id: users.id, name: users.name })"
+  echo "   See: rules/db-select-columns.md"
+  echo ""
+fi
+
+# Rule: db-avoid-n-plus-one — WARN on queries in loops
+if grep -rn "for.*await.*db\.\|\.forEach.*db\." src/ --include="*.ts" 2>/dev/null; then
+  echo ""
+  echo "⚠️  WARNING: Possible N+1 query — database query inside a loop"
+  echo "   Use db.query with 'with', JOINs, or .inArray() batch instead."
+  echo "   See: rules/db-avoid-n-plus-one.md"
+  echo ""
+fi
+
+# Rule: db-use-returning — WARN on INSERT/UPDATE without .returning()
+if grep -rn "\.insert(" src/ --include="*.ts" 2>/dev/null | grep -v ".returning()" | grep -v "onConflictDoNothing"; then
+  echo ""
+  echo "⚠️  WARNING: Found INSERT without .returning()"
+  echo "   Always use .returning() to get the created row data."
+  echo "   See: rules/db-use-returning.md"
+  echo ""
+fi
+
+# Rule: security-auth-jwt — BLOCK hardcoded secrets
+if grep -rn "secret.*=.*['\"]" src/ --include="*.ts" 2>/dev/null | grep -v "process.env" | grep -v "secretOrKey" | grep -v "jwtSecret\|JWT_SECRET\|secret.*module"; then
+  echo ""
+  echo "⚠️  WARNING: Possible hardcoded secret in source code"
+  echo "   Use process.env.JWT_SECRET via ConfigService instead."
+  echo "   See: rules/security-auth-jwt.md"
+  echo ""
+fi
+
+# Rule: error-handle-async-errors — WARN on fire-and-forget without catch
+if grep -rn "this\.[a-zA-Z]*Service\.[a-zA-Z]*(" src/ --include="*.ts" 2>/dev/null | grep -v "await " | grep -v ".catch(" | grep -v "return " | grep -v "// " | head -5; then
+  echo ""
+  echo "⚠️  WARNING: Possible fire-and-forget async call without .catch()"
+  echo "   Always add .catch() or await for async calls. Or use @OnEvent with try/catch."
+  echo "   See: rules/error-handle-async-errors.md"
+  echo ""
+fi
+
+echo "✅ Pre-commit rule checks passed"

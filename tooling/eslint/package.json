@@ -1,0 +1,5 @@
+{
+  "name": "@onboarding-tracker/tooling-eslint",
+  "private": true,
+  "files": ["base.js"]
+}

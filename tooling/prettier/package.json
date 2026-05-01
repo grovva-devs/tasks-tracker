@@ -1,0 +1,5 @@
+{
+  "name": "@onboarding-tracker/tooling-prettier",
+  "private": true,
+  "files": ["index.js"]
+}

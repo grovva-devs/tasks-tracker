@@ -1,0 +1,5 @@
+{
+  "name": "@onboarding-tracker/tooling-typescript",
+  "private": true,
+  "files": ["base.json", "internal-package.json"]
+}

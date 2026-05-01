@@ -23,5 +23,12 @@
       "prettier --write",
       "eslint --fix"
     ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "bcrypt",
+      "esbuild"
+    ]
   }
 }

@@ -1,0 +1,115 @@
+"use client";
+
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import { useBoardData } from "@/hooks/use-board-data";
+import { useBoardMutations } from "@/hooks/use-board-mutations";
+import { KanbanBoard } from "@/components/board/kanban-board";
+import { CardDetailPanel } from "@/components/board/card-detail-panel";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowLeft, MoreVertical, Share2 } from "lucide-react";
+import Link from "next/link";
+import { useAuthStore } from "@/lib/auth";
+import { apiClient } from "@/lib/api-client";
+
+interface CardDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  dueDate: string | null;
+  completedAt: string | null;
+  labels: { id: string; name: string; color: string }[];
+  comments: any[];
+  attachments: any[];
+}
+
+export default function BoardDetailPage() {
+  const params = useParams();
+  const boardId = params.id as string;
+  const token = useAuthStore((s) => s.token);
+
+  const { data: board, isLoading } = useBoardData(boardId, token);
+  const mutations = useBoardMutations(boardId);
+
+  const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+
+  const handleCardClick = async (cardId: string) => {
+    try {
+      const cardDetail = await apiClient<CardDetail>(`/cards/${cardId}`, { token: token! });
+      setSelectedCard(cardDetail);
+      setPanelOpen(true);
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleCopyPublicLink = () => {
+    if (board) {
+      navigator.clipboard.writeText(`${window.location.origin}/b/${board.publicToken}`);
+    }
+  };
+
+  if (isLoading) return <div className="animate-pulse h-96 bg-muted rounded-lg" />;
+  if (!board) return <div>Board not found</div>;
+
+  return (
+    <div className="space-y-4">
+      {/* Board Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/boards">
+            <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold">{board.title}</h1>
+            <p className="text-sm text-muted-foreground">{board.clientName}</p>
+          </div>
+          <Badge>{board.status}</Badge>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopyPublicLink}>
+            <Share2 className="mr-2 h-3.5 w-3.5" />
+            Copy Public Link
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+              <MoreVertical className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => apiClient(`/boards/${boardId}/regenerate-token`, { method: "PATCH", token: token! })}>
+                Regenerate public link
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Kanban Board */}
+      <KanbanBoard
+        board={board}
+        readOnly={false}
+        onCardMove={(cardId, listId, position) => mutations.moveCard.mutate({ id: cardId, listId, position })}
+        onListReorder={(items) => mutations.reorderLists.mutate(items)}
+        onDeleteList={(id) => mutations.deleteList.mutate(id)}
+        onAddCard={(listId, title) => mutations.addCard.mutate({ listId, title })}
+        onAddList={(title) => mutations.addList.mutate({ title })}
+        onCardClick={handleCardClick}
+      />
+
+      {/* Card Detail Panel */}
+      <CardDetailPanel
+        card={selectedCard}
+        isOpen={panelOpen}
+        onClose={() => { setPanelOpen(false); setSelectedCard(null); }}
+        readOnly={false}
+        onAddComment={(cardId, content, visibility) => mutations.addComment.mutate({ cardId, content, visibility })}
+      />
+    </div>
+  );
+}

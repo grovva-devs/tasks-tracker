@@ -29,26 +29,25 @@
   "tdd": {
     "phase": "red-pending",
     "testFiles": [
-      "apps/web/src/components/auth/login-form.test.tsx",
-      "apps/web/src/components/layout/sidebar.test.tsx",
-      "apps/web/src/components/boards/board-card.test.tsx"
+      "apps/web/src/components/board/kanban-board.test.tsx",
+      "apps/web/src/components/board/card-detail-panel.test.tsx",
+      "apps/web/src/app/b/[token]/page.test.tsx"
     ],
     "sourceFiles": [
-      "apps/web/src/middleware.ts",
-      "apps/web/src/providers/query-provider.tsx",
-      "apps/web/src/components/auth/login-form.tsx",
-      "apps/web/src/app/(auth)/layout.tsx",
-      "apps/web/src/app/(auth)/login/page.tsx",
-      "apps/web/src/components/layout/sidebar.tsx",
-      "apps/web/src/components/layout/header.tsx",
-      "apps/web/src/components/layout/notification-bell.tsx",
-      "apps/web/src/app/(dashboard)/layout.tsx",
-      "apps/web/src/components/boards/board-card.tsx",
-      "apps/web/src/components/boards/stats-cards.tsx",
-      "apps/web/src/components/boards/new-board-modal.tsx",
-      "apps/web/src/components/boards/board-list.tsx",
-      "apps/web/src/app/(dashboard)/boards/page.tsx",
-      "apps/web/src/app/page.tsx"
+      "apps/web/src/hooks/use-board-data.ts",
+      "apps/web/src/hooks/use-board-mutations.ts",
+      "apps/web/src/components/board/board-card-item.tsx",
+      "apps/web/src/components/board/board-list-col.tsx",
+      "apps/web/src/components/board/add-card-form.tsx",
+      "apps/web/src/components/board/add-list-form.tsx",
+      "apps/web/src/components/board/kanban-board.tsx",
+      "apps/web/src/components/board/comment-list.tsx",
+      "apps/web/src/components/board/attachment-list.tsx",
+      "apps/web/src/components/board/card-detail-panel.tsx",
+      "apps/web/src/providers/settings-provider.tsx",
+      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx",
+      "apps/web/src/app/b/layout.tsx",
+      "apps/web/src/app/b/[token]/page.tsx"
     ],
     "redVerificationPending": true
   },

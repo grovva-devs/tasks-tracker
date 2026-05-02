@@ -29,25 +29,20 @@
   "tdd": {
     "phase": "red-pending",
     "testFiles": [
-      "apps/web/src/components/board/kanban-board.test.tsx",
-      "apps/web/src/components/board/card-detail-panel.test.tsx",
-      "apps/web/src/app/b/[token]/page.test.tsx"
+      "apps/web/src/components/template/template-editor.test.tsx"
     ],
     "sourceFiles": [
-      "apps/web/src/hooks/use-board-data.ts",
-      "apps/web/src/hooks/use-board-mutations.ts",
-      "apps/web/src/components/board/board-card-item.tsx",
-      "apps/web/src/components/board/board-list-col.tsx",
-      "apps/web/src/components/board/add-card-form.tsx",
-      "apps/web/src/components/board/add-list-form.tsx",
-      "apps/web/src/components/board/kanban-board.tsx",
-      "apps/web/src/components/board/comment-list.tsx",
-      "apps/web/src/components/board/attachment-list.tsx",
-      "apps/web/src/components/board/card-detail-panel.tsx",
-      "apps/web/src/providers/settings-provider.tsx",
-      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx",
-      "apps/web/src/app/b/layout.tsx",
-      "apps/web/src/app/b/[token]/page.tsx"
+      "apps/web/src/components/template/variable-fields.tsx",
+      "apps/web/src/components/template/kanban-preview.tsx",
+      "apps/web/src/components/template/template-editor.tsx",
+      "apps/web/src/app/(dashboard)/templates/page.tsx",
+      "apps/web/src/app/(dashboard)/templates/new/page.tsx",
+      "apps/web/src/app/(dashboard)/templates/[id]/page.tsx",
+      "apps/web/src/app/(dashboard)/members/page.tsx",
+      "apps/web/src/components/settings/branding-tab.tsx",
+      "apps/web/src/components/settings/webhooks-tab.tsx",
+      "apps/web/src/app/(dashboard)/settings/page.tsx",
+      "apps/web/src/app/layout.tsx"
     ],
     "redVerificationPending": true
   },

@@ -7,6 +7,9 @@ describe("App (e2e)", () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    process.env.JWT_SECRET = "test-jwt-secret-for-e2e";
+    process.env.DATABASE_URL = "postgres://test:test@localhost:5432/test";
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -17,7 +20,9 @@ describe("App (e2e)", () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   it("GET /api/health => 200 OK", () => {

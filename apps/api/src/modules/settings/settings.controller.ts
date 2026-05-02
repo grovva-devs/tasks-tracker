@@ -3,6 +3,7 @@ import { SettingsService } from "./settings.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
+import { UpdateSettingsDto } from "../../common/dto/settings.dto";
 
 @Controller("settings")
 export class SettingsController {
@@ -22,7 +23,7 @@ export class SettingsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("admin")
   @Patch()
-  async update(@Body() body: Record<string, unknown>) {
-    return this.settingsService.update(body as any);
+  async update(@Body() body: UpdateSettingsDto) {
+    return this.settingsService.update(body);
   }
 }

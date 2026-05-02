@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
@@ -8,6 +9,12 @@ async function bootstrap() {
     credentials: true,
   });
   app.setGlobalPrefix("api");
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+  }));
   await app.listen(process.env.API_PORT ?? 3001);
   console.log(`API running on http://localhost:${process.env.API_PORT ?? 3001}`);
 }

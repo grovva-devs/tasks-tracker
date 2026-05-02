@@ -17,6 +17,7 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { BoardsService } from "../boards/boards.service";
 import { ListsService } from "../lists/lists.service";
 import { CardsService } from "../cards/cards.service";
+import { CreateTemplateDto, UpdateTemplateDto, ApplyTemplateDto } from "../../common/dto/templates.dto";
 
 @Controller("templates")
 export class TemplatesController {
@@ -41,7 +42,7 @@ export class TemplatesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() body: any, @CurrentUser() user: any) {
+  async create(@Body() body: CreateTemplateDto, @CurrentUser() user: any) {
     return this.templatesService.create({
       ...body,
       createdBy: user.id,
@@ -50,7 +51,7 @@ export class TemplatesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(":id/apply")
-  async applyTemplate(@Param("id") id: string, @Body() body: any, @CurrentUser() user: any) {
+  async applyTemplate(@Param("id") id: string, @Body() body: ApplyTemplateDto, @CurrentUser() user: any) {
     return this.templatesService.applyTemplate(id, {
       ...body,
       createdBy: user.id,
@@ -59,7 +60,7 @@ export class TemplatesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(":id")
-  async update(@Param("id") id: string, @Body() body: any) {
+  async update(@Param("id") id: string, @Body() body: UpdateTemplateDto) {
     return this.templatesService.update(id, body);
   }
 

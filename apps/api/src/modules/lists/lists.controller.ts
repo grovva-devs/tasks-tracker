@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ListsService } from "./lists.service";
+import { CreateListDto, UpdateListDto } from "../../common/dto/lists.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller("boards/:boardId/lists")
@@ -8,7 +9,7 @@ export class ListsController {
   constructor(private listsService: ListsService) {}
 
   @Post()
-  async create(@Param("boardId") boardId: string, @Body() body: any) {
+  async create(@Param("boardId") boardId: string, @Body() body: CreateListDto) {
     return this.listsService.create(boardId, body);
   }
 
@@ -27,7 +28,7 @@ export class ListsController {
   }
 
   @Patch(":id")
-  async update(@Param("id") id: string, @Body() body: any) {
+  async update(@Param("id") id: string, @Body() body: UpdateListDto) {
     return this.listsService.update(id, body);
   }
 

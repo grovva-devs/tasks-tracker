@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CardsService } from "./cards.service";
+import { CreateCardDto, UpdateCardDto, MoveCardDto, ReorderCardsDto } from "../../common/dto/cards.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -10,7 +11,7 @@ export class CardsController {
   @Post("lists/:listId/cards")
   async create(
     @Param("listId") listId: string,
-    @Body() body: { title: string; description?: string; dueDate?: string; boardId: string },
+    @Body() body: CreateCardDto,
   ) {
     return this.cardsService.create(listId, body.boardId, body);
   }
@@ -26,12 +27,12 @@ export class CardsController {
   }
 
   @Patch("cards/:id")
-  async update(@Param("id") id: string, @Body() body: any) {
+  async update(@Param("id") id: string, @Body() body: UpdateCardDto) {
     return this.cardsService.update(id, body);
   }
 
   @Patch("cards/:id/move")
-  async move(@Param("id") id: string, @Body() body: { listId: string; position: number }) {
+  async move(@Param("id") id: string, @Body() body: MoveCardDto) {
     return this.cardsService.moveCard(id, body.listId, body.position);
   }
 
@@ -44,7 +45,7 @@ export class CardsController {
   @Patch("lists/:listId/cards/reorder")
   async reorder(
     @Param("listId") listId: string,
-    @Body() body: { items: { id: string; position: number }[] },
+    @Body() body: ReorderCardsDto,
   ) {
     await this.cardsService.reorder(listId, body.items);
     return { success: true };

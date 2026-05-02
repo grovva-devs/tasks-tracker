@@ -15,6 +15,7 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { PublicBoardGuard } from "../auth/guards/public-board.guard";
+import { CreateBoardDto, UpdateBoardDto } from "../../common/dto/boards.dto";
 
 @Controller("boards")
 export class BoardsController {
@@ -29,13 +30,7 @@ export class BoardsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(
-    @Body()
-    body: {
-      title: string;
-      clientName: string;
-      clientEmail?: string;
-      description?: string;
-    },
+    @Body() body: CreateBoardDto,
     @CurrentUser() user: any,
   ) {
     return this.boardsService.create({
@@ -64,7 +59,7 @@ export class BoardsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(":id")
-  async update(@Param("id") id: string, @Body() body: any) {
+  async update(@Param("id") id: string, @Body() body: UpdateBoardDto) {
     return this.boardsService.update(id, body);
   }
 

@@ -5,6 +5,7 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { WebhookSender } from "../notifications/webhook.sender";
+import { CreateWebhookDto, UpdateWebhookDto } from "../../common/dto/webhooks.dto";
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles("admin")
@@ -21,12 +22,12 @@ export class WebhooksController {
   }
 
   @Post()
-  async create(@Body() body: { url: string; events: string[] }, @CurrentUser() user: any) {
+  async create(@Body() body: CreateWebhookDto, @CurrentUser() user: any) {
     return this.webhooksService.create({ url: body.url, events: body.events, createdBy: user.id });
   }
 
   @Patch(":id")
-  async update(@Param("id") id: string, @Body() body: { url?: string; events?: string[]; isActive?: boolean }) {
+  async update(@Param("id") id: string, @Body() body: UpdateWebhookDto) {
     if (body.isActive !== undefined) {
       return this.webhooksService.toggleActive(id, body.isActive);
     }

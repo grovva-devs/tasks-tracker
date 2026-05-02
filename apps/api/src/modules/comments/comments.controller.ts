@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } f
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CommentsService } from "./comments.service";
+import { CreateCommentDto, UpdateCommentDto } from "../../common/dto/comments.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller("cards/:cardId/comments")
@@ -11,7 +12,7 @@ export class CommentsController {
   @Post()
   async create(
     @Param("cardId") cardId: string,
-    @Body() body: { content: string; visibility: string },
+    @Body() body: CreateCommentDto,
     @CurrentUser() user: any,
   ) {
     return this.commentsService.create(cardId, user.id, body);
@@ -25,7 +26,7 @@ export class CommentsController {
   @Patch(":id")
   async update(
     @Param("id") id: string,
-    @Body() body: { content: string },
+    @Body() body: UpdateCommentDto,
     @CurrentUser() user: any,
   ) {
     return this.commentsService.update(id, user.id, body.content);

@@ -27,14 +27,34 @@
     }
   },
   "tdd": {
-    "phase": "idle",
-    "testFiles": [],
-    "sourceFiles": [],
-    "redVerificationPending": false
+    "phase": "red-pending",
+    "testFiles": [
+      "apps/api/src/common/dto/validation.spec.ts"
+    ],
+    "sourceFiles": [
+      "apps/api/src/common/dto/auth.dto.ts",
+      "apps/api/src/common/dto/boards.dto.ts",
+      "apps/api/src/common/dto/cards.dto.ts",
+      "apps/api/src/common/dto/lists.dto.ts",
+      "apps/api/src/common/dto/templates.dto.ts",
+      "apps/api/src/common/dto/settings.dto.ts",
+      "apps/api/src/common/dto/webhooks.dto.ts",
+      "apps/api/src/common/dto/comments.dto.ts",
+      "apps/api/src/main.ts",
+      "apps/api/src/modules/auth/auth.controller.ts",
+      "apps/api/src/modules/boards/boards.controller.ts",
+      "apps/api/src/modules/cards/cards.controller.ts",
+      "apps/api/src/modules/lists/lists.controller.ts",
+      "apps/api/src/modules/templates/templates.controller.ts",
+      "apps/api/src/modules/settings/settings.controller.ts",
+      "apps/api/src/modules/webhooks/webhooks.controller.ts",
+      "apps/api/src/modules/comments/comments.controller.ts"
+    ],
+    "redVerificationPending": true
   },
   "debug": {
     "active": false,
-    "investigated": false,
+    "investigated": true,
     "fixAttempts": 0
   },
   "verification": {

@@ -9,6 +9,7 @@ import { CardsModule } from "./modules/cards/cards.module";
 import { CommentsModule } from "./modules/comments/comments.module";
 import { AttachmentsModule } from "./modules/attachments/attachments.module";
 import { LabelsModule } from "./modules/labels/labels.module";
+import { TemplatesModule } from "./modules/templates/templates.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { LabelsModule } from "./modules/labels/labels.module";
     CommentsModule,
     AttachmentsModule,
     LabelsModule,
+    TemplatesModule,
   ],
   controllers: [HealthController],
 })

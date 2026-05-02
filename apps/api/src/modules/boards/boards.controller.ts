@@ -15,6 +15,7 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { PublicBoardGuard } from "../auth/guards/public-board.guard";
+import { BoardMemberGuard } from "../../common/guards/board-member.guard";
 import { CreateBoardDto, UpdateBoardDto } from "../../common/dto/boards.dto";
 
 @Controller("boards")
@@ -45,19 +46,19 @@ export class BoardsController {
     return this.boardsService.findAll({ status: "active" });
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BoardMemberGuard)
   @Get(":id")
   async findOne(@Param("id") id: string) {
     return this.boardsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BoardMemberGuard)
   @Get(":id/detail")
   async findDetail(@Param("id") id: string) {
     return this.boardsService.findDetail(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BoardMemberGuard)
   @Patch(":id")
   async update(@Param("id") id: string, @Body() body: UpdateBoardDto) {
     return this.boardsService.update(id, body);
@@ -71,14 +72,14 @@ export class BoardsController {
     return { success: true };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BoardMemberGuard)
   @Patch(":id/regenerate-token")
   async regenerateToken(@Param("id") id: string) {
     const board = await this.boardsService.regenerateToken(id);
     return { publicToken: board.publicToken };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BoardMemberGuard)
   @Get(":id/stats")
   async getStats(@Param("id") id: string) {
     return this.boardsService.getStats(id);

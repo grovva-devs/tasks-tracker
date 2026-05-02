@@ -36,12 +36,14 @@ export class OverdueCronListener {
             .from(cardAssignees)
             .where(eq(cardAssignees.cardId, card.cardId));
 
-          this.eventEmitter.emit(EVENTS.CARD_OVERDUE, {
+          this.eventEmitter.emitAsync(EVENTS.CARD_OVERDUE, {
             cardId: card.cardId,
             cardTitle: card.cardTitle,
             boardId: card.boardId,
             assigneeIds: assignees.map((a) => a.userId),
             dueDate: card.dueDate,
+          }).catch((err: Error) => {
+            this.logger.error(`Failed to emit card.overdue event: ${err.message}`);
           });
         } catch (error) {
           this.logger.error(`Failed to process overdue card ${card.cardId}: ${(error as Error).message}`);

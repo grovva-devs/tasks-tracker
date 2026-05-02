@@ -14,7 +14,8 @@ export class SettingsController {
     return this.settingsService.getPublic();
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("admin")
   @Get()
   async getFull() {
     return this.settingsService.getFull();

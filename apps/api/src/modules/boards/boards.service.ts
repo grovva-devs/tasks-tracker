@@ -81,7 +81,14 @@ export class BoardsService {
 
   async findOne(id: string) {
     const [board] = await db
-      .select()
+      .select({
+        id: boards.id, title: boards.title, description: boards.description,
+        slug: boards.slug, publicId: boards.publicId, publicToken: boards.publicToken,
+        clientName: boards.clientName, clientEmail: boards.clientEmail,
+        status: boards.status, templateId: boards.templateId,
+        createdBy: boards.createdBy, position: boards.position,
+        createdAt: boards.createdAt, updatedAt: boards.updatedAt,
+      })
       .from(boards)
       .where(eq(boards.id, id))
       .limit(1);
@@ -91,7 +98,14 @@ export class BoardsService {
 
   async findDetail(id: string) {
     const [board] = await db
-      .select()
+      .select({
+        id: boards.id, title: boards.title, description: boards.description,
+        slug: boards.slug, publicId: boards.publicId, publicToken: boards.publicToken,
+        clientName: boards.clientName, clientEmail: boards.clientEmail,
+        status: boards.status, templateId: boards.templateId,
+        createdBy: boards.createdBy, position: boards.position,
+        createdAt: boards.createdAt, updatedAt: boards.updatedAt,
+      })
       .from(boards)
       .where(eq(boards.id, id))
       .limit(1);
@@ -99,13 +113,23 @@ export class BoardsService {
 
     // Fetch lists with their cards
     const boardLists = await db
-      .select()
+      .select({
+        id: lists.id, boardId: lists.boardId, title: lists.title,
+        position: lists.position, color: lists.color,
+        createdAt: lists.createdAt, updatedAt: lists.updatedAt,
+      })
       .from(lists)
       .where(eq(lists.boardId, id))
       .orderBy(lists.position);
 
     const boardCards = await db
-      .select()
+      .select({
+        id: cards.id, listId: cards.listId, boardId: cards.boardId,
+        publicId: cards.publicId, cardNumber: cards.cardNumber,
+        title: cards.title, description: cards.description, position: cards.position,
+        dueDate: cards.dueDate, completedAt: cards.completedAt,
+        createdBy: cards.createdBy, createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+      })
       .from(cards)
       .where(eq(cards.boardId, id))
       .orderBy(cards.position);
@@ -130,7 +154,11 @@ export class BoardsService {
 
   async findByPublicToken(token: string) {
     const [board] = await db
-      .select()
+      .select({
+        id: boards.id, title: boards.title, slug: boards.slug,
+        publicToken: boards.publicToken, clientName: boards.clientName,
+        clientEmail: boards.clientEmail, status: boards.status,
+      })
       .from(boards)
       .where(eq(boards.publicToken, token))
       .limit(1);
@@ -140,20 +168,35 @@ export class BoardsService {
 
   async findPublicDetail(token: string) {
     const [board] = await db
-      .select()
+      .select({
+        id: boards.id, title: boards.title, description: boards.description,
+        slug: boards.slug, publicId: boards.publicId, publicToken: boards.publicToken,
+        clientName: boards.clientName, clientEmail: boards.clientEmail,
+        status: boards.status, createdAt: boards.createdAt, updatedAt: boards.updatedAt,
+      })
       .from(boards)
       .where(eq(boards.publicToken, token))
       .limit(1);
     if (!board) throw new NotFoundException("Board not found");
 
     const boardLists = await db
-      .select()
+      .select({
+        id: lists.id, boardId: lists.boardId, title: lists.title,
+        position: lists.position, color: lists.color,
+        createdAt: lists.createdAt, updatedAt: lists.updatedAt,
+      })
       .from(lists)
       .where(eq(lists.boardId, board.id))
       .orderBy(lists.position);
 
     const boardCards = await db
-      .select()
+      .select({
+        id: cards.id, listId: cards.listId, boardId: cards.boardId,
+        publicId: cards.publicId, cardNumber: cards.cardNumber,
+        title: cards.title, description: cards.description, position: cards.position,
+        dueDate: cards.dueDate, completedAt: cards.completedAt,
+        createdBy: cards.createdBy, createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+      })
       .from(cards)
       .where(eq(cards.boardId, board.id))
       .orderBy(cards.position);

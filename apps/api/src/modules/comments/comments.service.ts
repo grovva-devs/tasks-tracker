@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { cardComments } from "../../database/schema";
 
@@ -21,13 +21,21 @@ export class CommentsService {
   async findByCard(cardId: string, visibility?: string) {
     if (visibility) {
       return db
-        .select()
+        .select({
+          id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
+          content: cardComments.content, visibility: cardComments.visibility,
+          createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
+        })
         .from(cardComments)
-        .where(eq(cardComments.cardId, cardId))
+        .where(and(eq(cardComments.cardId, cardId), eq(cardComments.visibility, visibility)))
         .orderBy(cardComments.createdAt);
     }
     return db
-      .select()
+      .select({
+        id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
+        content: cardComments.content, visibility: cardComments.visibility,
+        createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
+      })
       .from(cardComments)
       .where(eq(cardComments.cardId, cardId))
       .orderBy(cardComments.createdAt);
@@ -35,7 +43,11 @@ export class CommentsService {
 
   async update(id: string, authorId: string, content: string) {
     const [comment] = await db
-      .select()
+      .select({
+        id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
+        content: cardComments.content, visibility: cardComments.visibility,
+        createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
+      })
       .from(cardComments)
       .where(eq(cardComments.id, id))
       .limit(1);

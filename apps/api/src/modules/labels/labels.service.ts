@@ -15,7 +15,7 @@ export class LabelsService {
 
   async findByBoard(boardId: string) {
     return db
-      .select()
+      .select({ id: labels.id, boardId: labels.boardId, name: labels.name, color: labels.color })
       .from(labels)
       .where(eq(labels.boardId, boardId));
   }

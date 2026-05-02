@@ -100,7 +100,11 @@ export class TemplatesService {
 
   async findOne(id: string) {
     const [template] = await db
-      .select()
+      .select({
+        id: templates.id, name: templates.name, description: templates.description,
+        categoryId: templates.categoryId, isDefault: templates.isDefault,
+        createdBy: templates.createdBy, createdAt: templates.createdAt, updatedAt: templates.updatedAt,
+      })
       .from(templates)
       .where(eq(templates.id, id))
       .limit(1);
@@ -108,26 +112,38 @@ export class TemplatesService {
     if (!template) throw new NotFoundException("Template not found");
 
     const variables = await db
-      .select()
+      .select({
+        id: templateVariables.id, templateId: templateVariables.templateId,
+        key: templateVariables.key, displayName: templateVariables.displayName,
+        defaultValue: templateVariables.defaultValue, isRequired: templateVariables.isRequired,
+      })
       .from(templateVariables)
       .where(eq(templateVariables.templateId, id));
 
-    const lists = await db
-      .select()
+    const templateLists = await db
+      .select({
+        id: templateLists.id, templateId: templateLists.templateId,
+        title: templateLists.title, color: templateLists.color,
+        position: templateLists.position, createdAt: templateLists.createdAt,
+      })
       .from(templateLists)
       .where(eq(templateLists.templateId, id))
       .orderBy(templateLists.position);
 
-    for (const list of lists) {
-      const cards = await db
-        .select()
+    for (const list of templateLists) {
+      const listCards = await db
+        .select({
+          id: templateCards.id, templateListId: templateCards.templateListId,
+          title: templateCards.title, description: templateCards.description,
+          position: templateCards.position, dueDateOffsetDays: templateCards.dueDateOffsetDays,
+        })
         .from(templateCards)
         .where(eq(templateCards.templateListId, list.id))
         .orderBy(templateCards.position);
-      (list as any).cards = cards;
+      (list as any).cards = listCards;
     }
 
-    return { ...template, variables, lists };
+    return { ...template, variables, lists: templateLists };
   }
 
   async update(id: string, data: { name?: string; description?: string; categoryId?: string; isDefault?: boolean }) {

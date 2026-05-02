@@ -20,7 +20,12 @@ export class AttachmentsService {
 
   async findByCard(cardId: string) {
     return db
-      .select()
+      .select({
+        id: cardAttachments.id, cardId: cardAttachments.cardId,
+        fileName: cardAttachments.fileName, fileUrl: cardAttachments.fileUrl,
+        fileSize: cardAttachments.fileSize, mimeType: cardAttachments.mimeType,
+        visibility: cardAttachments.visibility, createdAt: cardAttachments.createdAt,
+      })
       .from(cardAttachments)
       .where(eq(cardAttachments.cardId, cardId))
       .orderBy(cardAttachments.createdAt);

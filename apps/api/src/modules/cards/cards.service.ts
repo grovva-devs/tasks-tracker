@@ -52,19 +52,67 @@ export class CardsService {
   }
 
   async findOne(id: string) {
-    const [card] = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
+    const [card] = await db
+      .select({
+        id: cards.id, listId: cards.listId, boardId: cards.boardId,
+        publicId: cards.publicId, cardNumber: cards.cardNumber,
+        title: cards.title, description: cards.description, position: cards.position,
+        dueDate: cards.dueDate, completedAt: cards.completedAt,
+        deletedAt: cards.deletedAt, createdBy: cards.createdBy,
+        createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+      })
+      .from(cards)
+      .where(eq(cards.id, id))
+      .limit(1);
     if (!card) throw new NotFoundException("Card not found");
     return card;
   }
 
   async findDetail(id: string) {
-    const [card] = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
+    const [card] = await db
+      .select({
+        id: cards.id, listId: cards.listId, boardId: cards.boardId,
+        publicId: cards.publicId, cardNumber: cards.cardNumber,
+        title: cards.title, description: cards.description, position: cards.position,
+        dueDate: cards.dueDate, completedAt: cards.completedAt,
+        deletedAt: cards.deletedAt, createdBy: cards.createdBy,
+        createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+      })
+      .from(cards)
+      .where(eq(cards.id, id))
+      .limit(1);
     if (!card) throw new NotFoundException("Card not found");
 
-    const comments = await db.select().from(cardComments).where(eq(cardComments.cardId, id)).orderBy(cardComments.createdAt);
-    const attachments = await db.select().from(cardAttachments).where(eq(cardAttachments.cardId, id)).orderBy(cardAttachments.createdAt);
-    const assignees = await db.select().from(cardAssignees).where(eq(cardAssignees.cardId, id));
-    const labels = await db.select().from(cardLabels).where(eq(cardLabels.cardId, id));
+    const comments = await db
+      .select({
+        id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
+        content: cardComments.content, visibility: cardComments.visibility,
+        createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
+      })
+      .from(cardComments)
+      .where(eq(cardComments.cardId, id))
+      .orderBy(cardComments.createdAt);
+
+    const attachments = await db
+      .select({
+        id: cardAttachments.id, cardId: cardAttachments.cardId,
+        fileName: cardAttachments.fileName, fileUrl: cardAttachments.fileUrl,
+        fileSize: cardAttachments.fileSize, mimeType: cardAttachments.mimeType,
+        visibility: cardAttachments.visibility, createdAt: cardAttachments.createdAt,
+      })
+      .from(cardAttachments)
+      .where(eq(cardAttachments.cardId, id))
+      .orderBy(cardAttachments.createdAt);
+
+    const assignees = await db
+      .select({ cardId: cardAssignees.cardId, userId: cardAssignees.userId })
+      .from(cardAssignees)
+      .where(eq(cardAssignees.cardId, id));
+
+    const labels = await db
+      .select({ cardId: cardLabels.cardId, labelId: cardLabels.labelId })
+      .from(cardLabels)
+      .where(eq(cardLabels.cardId, id));
 
     return { ...card, comments, attachments, assignees, labels };
   }
@@ -80,10 +128,24 @@ export class CardsService {
   }
 
   async moveCard(id: string, listId: string, position: number) {
-    const [card] = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
+    const [card] = await db
+      .select({
+        id: cards.id, listId: cards.listId, boardId: cards.boardId,
+        publicId: cards.publicId, cardNumber: cards.cardNumber,
+        title: cards.title, description: cards.description, position: cards.position,
+        dueDate: cards.dueDate, completedAt: cards.completedAt,
+        createdBy: cards.createdBy, createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+      })
+      .from(cards)
+      .where(eq(cards.id, id))
+      .limit(1);
     if (!card) throw new NotFoundException("Card not found");
 
-    const [targetList] = await db.select().from(lists).where(eq(lists.id, listId)).limit(1);
+    const [targetList] = await db
+      .select({ id: lists.id, title: lists.title, boardId: lists.boardId, position: lists.position })
+      .from(lists)
+      .where(eq(lists.id, listId))
+      .limit(1);
     if (!targetList) throw new NotFoundException("Target list not found");
 
     let completedAt: Date | null = card.completedAt;

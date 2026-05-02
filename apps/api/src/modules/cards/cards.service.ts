@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and } from "drizzle-orm";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
 import { cards, lists, cardComments, cardAttachments, cardAssignees, cardLabels } from "../../database/schema";
-import { isCompletionList } from "@onboarding-tracker/shared";
+import { isCompletionList, EVENTS } from "@onboarding-tracker/shared";
 
 @Injectable()
 export class CardsService {
+  constructor(private eventEmitter: EventEmitter2) {}
+
   async create(listId: string, boardId: string, data: { title: string; description?: string; dueDate?: string }) {
     const [card] = await db
       .insert(cards)
@@ -17,6 +20,15 @@ export class CardsService {
         dueDate: data.dueDate ?? null,
       })
       .returning();
+
+    // Emit card.created event (fire-and-forget)
+    this.eventEmitter.emitAsync(EVENTS.CARD_CREATED, {
+      cardId: card.id,
+      cardTitle: card.title,
+      boardId: card.boardId,
+      listId: card.listId,
+    }).catch(() => {});
+
     return card;
   }
 
@@ -40,52 +52,21 @@ export class CardsService {
   }
 
   async findOne(id: string) {
-    const [card] = await db
-      .select()
-      .from(cards)
-      .where(eq(cards.id, id))
-      .limit(1);
+    const [card] = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
     if (!card) throw new NotFoundException("Card not found");
     return card;
   }
 
   async findDetail(id: string) {
-    const [card] = await db
-      .select()
-      .from(cards)
-      .where(eq(cards.id, id))
-      .limit(1);
+    const [card] = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
     if (!card) throw new NotFoundException("Card not found");
 
-    const comments = await db
-      .select()
-      .from(cardComments)
-      .where(eq(cardComments.cardId, id))
-      .orderBy(cardComments.createdAt);
+    const comments = await db.select().from(cardComments).where(eq(cardComments.cardId, id)).orderBy(cardComments.createdAt);
+    const attachments = await db.select().from(cardAttachments).where(eq(cardAttachments.cardId, id)).orderBy(cardAttachments.createdAt);
+    const assignees = await db.select().from(cardAssignees).where(eq(cardAssignees.cardId, id));
+    const labels = await db.select().from(cardLabels).where(eq(cardLabels.cardId, id));
 
-    const attachments = await db
-      .select()
-      .from(cardAttachments)
-      .where(eq(cardAttachments.cardId, id))
-      .orderBy(cardAttachments.createdAt);
-
-    const assignees = await db
-      .select()
-      .from(cardAssignees)
-      .where(eq(cardAssignees.cardId, id));
-
-    const labels = await db
-      .select()
-      .from(cardLabels)
-      .where(eq(cardLabels.cardId, id));
-
-    return {
-      ...card,
-      comments,
-      attachments,
-      assignees,
-      labels,
-    };
+    return { ...card, comments, attachments, assignees, labels };
   }
 
   async update(id: string, data: { title?: string; description?: string; dueDate?: string | null }) {
@@ -118,6 +99,27 @@ export class CardsService {
       .set({ listId, position, completedAt, updatedAt: new Date() })
       .where(eq(cards.id, id))
       .returning();
+
+    // Emit card.completed or card.moved event
+    if (completedAt && isCompletionList(targetList.title)) {
+      this.eventEmitter.emitAsync(EVENTS.CARD_COMPLETED, {
+        cardId: updated.id,
+        cardTitle: updated.title,
+        boardId: updated.boardId,
+        completedBy: updated.createdBy,
+        listTitle: targetList.title,
+      }).catch(() => {
+        // Per rules/error-handle-async-errors.md — never let fire-and-forget crash
+      });
+    } else {
+      this.eventEmitter.emitAsync(EVENTS.CARD_MOVED, {
+        cardId: updated.id,
+        cardTitle: updated.title,
+        boardId: updated.boardId,
+        listId,
+        listTitle: targetList.title,
+      }).catch(() => {});
+    }
 
     return updated;
   }

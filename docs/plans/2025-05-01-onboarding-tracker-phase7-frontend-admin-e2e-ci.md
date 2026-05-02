@@ -1,12 +1,12 @@
-# Phase 7: Frontend Admin Pages + E2E Testing + CI — Implementation Plan
+# Phase 7: Frontend Admin Pages + E2E Testing — Implementation Plan
 
 > **REQUIRED SUB-SKILL:** Use the executing-plans skill to implement this plan task-by-task.
 
-**Goal:** Build the remaining frontend admin pages (templates editor, members management, settings), write E2E integration tests covering the full user flow, create production Dockerfiles, and set up CI with GitHub Actions.
+**Goal:** Build the remaining frontend admin pages (templates editor, members management, settings), write E2E integration tests covering the full user flow, create production Dockerfiles
 
 **Architecture:** Admin pages use the same dashboard layout from Phase 5. Template editor includes a live kanban preview showing `{{variables}}` highlighted. Members page uses admin-only endpoints. Settings has tabs for Branding / Notifications / Webhooks. E2E test uses the running NestJS app against real PostgreSQL.
 
-**Tech Stack:** Next.js 15, React Query, Shadcn/ui, Vitest, Supertest, Docker, GitHub Actions
+**Tech Stack:** Next.js 15, React Query, Shadcn/ui, Vitest, Supertest, Docker
 
 **Depends on:** Phase 5 + Phase 6 complete
 **Rules Hub:** `docs/plans/IMPLEMENTATION-HUB.md`
@@ -1442,102 +1442,10 @@ coverage
 .git
 ```
 
-**Step 2: Create CI workflow**
-
-Create `.github/workflows/ci.yml`:
-
-```yaml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: onboarding_tracker_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run shared package tests
-        run: pnpm --filter @onboarding-tracker/shared test
-
-      - name: Run API unit tests
-        run: pnpm --filter @onboarding-tracker/api test
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/onboarding_tracker_test
-          JWT_SECRET: test-jwt-secret-for-ci-only
-
-      - name: Run API migrations
-        run: pnpm --filter @onboarding-tracker/api db:migrate
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/onboarding_tracker_test
-
-      - name: Seed database
-        run: pnpm --filter @onboarding-tracker/api db:seed
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/onboarding_tracker_test
-
-      - name: Run API e2e tests
-        run: pnpm --filter @onboarding-tracker/api test:e2e
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/onboarding_tracker_test
-          JWT_SECRET: test-jwt-secret-for-ci-only
-
-      - name: Run Web tests
-        run: pnpm --filter @onboarding-tracker/web test
-
-      - name: Build all packages
-        run: pnpm build
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-```
-
 **Step 3: Commit**
 
 ```bash
-git add -A && git commit -m "infra: add production Dockerfiles and GitHub Actions CI workflow"
+git add -A && git commit -m "infra: add production Dockerfiles"
 ```
 
 ---
@@ -1549,4 +1457,3 @@ git add -A && git commit -m "infra: add production Dockerfiles and GitHub Action
 - ✅ Settings page with branding tab (logo/color/name) + webhooks tab (CRUD + test)
 - ✅ Full flow E2E test (login → template → board → CRUD → completion → public view)
 - ✅ Production Dockerfiles for API + Web
-- ✅ GitHub Actions CI with PostgreSQL service container

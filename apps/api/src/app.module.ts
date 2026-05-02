@@ -10,6 +10,10 @@ import { CommentsModule } from "./modules/comments/comments.module";
 import { AttachmentsModule } from "./modules/attachments/attachments.module";
 import { LabelsModule } from "./modules/labels/labels.module";
 import { TemplatesModule } from "./modules/templates/templates.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
+import { SettingsModule } from "./modules/settings/settings.module";
+import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { TemplatesModule } from "./modules/templates/templates.module";
     AttachmentsModule,
     LabelsModule,
     TemplatesModule,
+    NotificationsModule,
+    DashboardModule,
+    SettingsModule,
+    WebhooksModule,
   ],
   controllers: [HealthController],
 })

@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and, ilike, sql } from "drizzle-orm";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
 import { boards, lists, cards } from "../../database/schema";
-import { generateSlug } from "@onboarding-tracker/shared";
+import { generateSlug, EVENTS } from "@onboarding-tracker/shared";
 import * as crypto from "crypto";
 
 @Injectable()
 export class BoardsService {
+  constructor(private eventEmitter: EventEmitter2) {}
   async create(data: {
     title: string;
     clientName: string;
@@ -32,6 +34,16 @@ export class BoardsService {
         templateId: data.templateId ?? null,
       })
       .returning();
+
+    // Emit board.created event (fire-and-forget with .catch())
+    this.eventEmitter.emitAsync(EVENTS.BOARD_CREATED, {
+      boardId: board.id,
+      boardTitle: board.title,
+      createdBy: data.createdBy,
+      teamMemberIds: [data.createdBy],
+    }).catch((err: Error) => {
+      // Per rules/error-handle-async-errors.md — never let fire-and-forget crash
+    });
 
     return board;
   }

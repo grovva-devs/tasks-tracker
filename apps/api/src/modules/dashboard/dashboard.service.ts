@@ -1,0 +1,51 @@
+import { Injectable } from "@nestjs/common";
+import { eq, sql, desc } from "drizzle-orm";
+import { db } from "../../database/connection";
+import { boards } from "../../database/schema";
+
+@Injectable()
+export class DashboardService {
+  async getOverview() {
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(boards);
+
+    const [activeResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(boards)
+      .where(eq(boards.status, "active"));
+
+    const [completedResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(boards)
+      .where(eq(boards.status, "completed"));
+
+    const total = totalResult?.count ?? 0;
+    const active = activeResult?.count ?? 0;
+    const completed = completedResult?.count ?? 0;
+
+    return {
+      totalBoards: total,
+      activeBoards: active,
+      completedBoards: completed,
+      archivedBoards: total - active - completed,
+      avgCompletionPercentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+    };
+  }
+
+  async getRecentActivity(limit = 20) {
+    return db
+      .select({
+        id: boards.id,
+        title: boards.title,
+        slug: boards.slug,
+        clientName: boards.clientName,
+        status: boards.status,
+        position: boards.position,
+        updatedAt: boards.updatedAt,
+      })
+      .from(boards)
+      .orderBy(desc(boards.updatedAt))
+      .limit(limit);
+  }
+}

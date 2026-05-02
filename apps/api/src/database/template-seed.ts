@@ -28,7 +28,7 @@ async function seedTemplates() {
       { templateId: saasTemplate.id, key: "client_name", displayName: "Client Name", isRequired: true },
       { templateId: saasTemplate.id, key: "service_type", displayName: "Service Type", defaultValue: "SaaS Standard", isRequired: false },
       { templateId: saasTemplate.id, key: "start_date", displayName: "Project Start Date", isRequired: true },
-    ]);
+    ]).returning();
 
     // List: Setup
     const [setupList] = await db
@@ -40,7 +40,7 @@ async function seedTemplates() {
       { templateListId: setupList.id, title: "Welcome {{client_name}} — kick-off call", position: 0, dueDateOffsetDays: 0 },
       { templateListId: setupList.id, title: "Configure {{service_type}} environment", description: "Set up the {{service_type}} instance for {{client_name}}", position: 1, dueDateOffsetDays: 3 },
       { templateListId: setupList.id, title: "Send NDA and contracts", position: 2, dueDateOffsetDays: 2 },
-    ]);
+    ]).returning();
 
     // List: In Progress
     const [progressList] = await db
@@ -51,7 +51,7 @@ async function seedTemplates() {
     await db.insert(templateCards).values([
       { templateListId: progressList.id, title: "Training sessions for {{client_name}} team", position: 0, dueDateOffsetDays: 7 },
       { templateListId: progressList.id, title: "Data migration", position: 1, dueDateOffsetDays: 10 },
-    ]);
+    ]).returning();
 
     // List: Done
     await db
@@ -77,7 +77,7 @@ async function seedTemplates() {
     await db.insert(templateVariables).values([
       { templateId: consultingTemplate.id, key: "client_name", displayName: "Client Name", isRequired: true },
       { templateId: consultingTemplate.id, key: "engagement_type", displayName: "Engagement Type", defaultValue: "Advisory", isRequired: false },
-    ]);
+    ]).returning();
 
     const [planningList] = await db
       .insert(templateLists)
@@ -87,7 +87,7 @@ async function seedTemplates() {
     await db.insert(templateCards).values([
       { templateListId: planningList.id, title: "Discovery meeting with {{client_name}}", position: 0, dueDateOffsetDays: 0 },
       { templateListId: planningList.id, title: "Scope definition for {{engagement_type}}", position: 1, dueDateOffsetDays: 5 },
-    ]);
+    ]).returning();
 
     const [activeList] = await db
       .insert(templateLists)
@@ -96,7 +96,7 @@ async function seedTemplates() {
 
     await db.insert(templateCards).values([
       { templateListId: activeList.id, title: "Weekly check-ins with {{client_name}}", position: 0, dueDateOffsetDays: 7 },
-    ]);
+    ]).returning();
 
     await db
       .insert(templateLists)

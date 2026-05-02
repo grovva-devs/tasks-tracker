@@ -15,7 +15,8 @@ async function seed() {
       displayName: "Admin",
       role: "admin",
     })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning();
 
   console.log("Seed complete! Admin user: admin@company.com / admin123");
 }

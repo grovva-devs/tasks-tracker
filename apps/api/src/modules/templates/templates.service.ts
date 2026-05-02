@@ -63,7 +63,7 @@ export class TemplatesService {
               position: cardData.position,
               dueDateOffsetDays: cardData.dueDateOffsetDays ?? null,
             })),
-          );
+          ).returning();
         }
       }
     }

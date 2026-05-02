@@ -30,12 +30,9 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/cards/cards.service.ts",
-      "apps/api/src/modules/boards/boards.service.ts",
-      "apps/api/src/modules/comments/comments.service.ts",
-      "apps/api/src/modules/attachments/attachments.service.ts",
-      "apps/api/src/modules/labels/labels.service.ts",
-      "apps/api/src/modules/templates/templates.service.ts"
+      "apps/api/src/database/template-seed.ts",
+      "apps/api/src/modules/templates/templates.service.ts",
+      "apps/api/src/database/seed.ts"
     ],
     "redVerificationPending": false
   },

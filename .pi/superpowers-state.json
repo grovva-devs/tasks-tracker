@@ -27,28 +27,14 @@
     }
   },
   "tdd": {
-    "phase": "red-pending",
-    "testFiles": [
-      "apps/web/src/components/template/template-editor.test.tsx"
-    ],
-    "sourceFiles": [
-      "apps/web/src/components/template/variable-fields.tsx",
-      "apps/web/src/components/template/kanban-preview.tsx",
-      "apps/web/src/components/template/template-editor.tsx",
-      "apps/web/src/app/(dashboard)/templates/page.tsx",
-      "apps/web/src/app/(dashboard)/templates/new/page.tsx",
-      "apps/web/src/app/(dashboard)/templates/[id]/page.tsx",
-      "apps/web/src/app/(dashboard)/members/page.tsx",
-      "apps/web/src/components/settings/branding-tab.tsx",
-      "apps/web/src/components/settings/webhooks-tab.tsx",
-      "apps/web/src/app/(dashboard)/settings/page.tsx",
-      "apps/web/src/app/layout.tsx"
-    ],
-    "redVerificationPending": true
+    "phase": "idle",
+    "testFiles": [],
+    "sourceFiles": [],
+    "redVerificationPending": false
   },
   "debug": {
     "active": false,
-    "investigated": true,
+    "investigated": false,
     "fixAttempts": 0
   },
   "verification": {

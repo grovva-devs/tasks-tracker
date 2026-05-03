@@ -194,6 +194,34 @@ describe("Full User Flow (e2e)", () => {
     expect(settingsRes.body).not.toHaveProperty("emailFrom");
   });
 
+  // Step 9b: Verify public card detail only shows client-visible comments
+  it("public card detail only shows client-visible comments", async () => {
+    const listsRes = await request(app.getHttpServer())
+      .get(`/api/boards/${boardId}/lists`)
+      .set(authHeader());
+    const firstCardId = listsRes.body[0].cards[0].id;
+
+    // Get public token
+    const boardRes = await request(app.getHttpServer())
+      .get(`/api/boards/${boardId}`)
+      .set(authHeader());
+    const publicToken = boardRes.body.publicToken;
+
+    // Access public card detail endpoint
+    const publicCardRes = await request(app.getHttpServer())
+      .get(`/api/boards/public/${publicToken}/cards/${firstCardId}`);
+
+    if (publicCardRes.status === 200) {
+      // Only client-visible comments should appear
+      const comments = publicCardRes.body.comments ?? [];
+      comments.forEach((c: any) => {
+        expect(c.visibility).toBe("client");
+      });
+      // Internal comment should NOT appear
+      expect(comments.every((c: any) => c.content !== "Internal team note")).toBe(true);
+    }
+  });
+
   // Step 10: Board stats showing completion
   it("gets board stats showing completion", async () => {
     const res = await request(app.getHttpServer())

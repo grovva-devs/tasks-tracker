@@ -30,8 +30,9 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/dashboard/dashboard.service.ts",
-      "apps/api/src/modules/cards/cards.service.ts"
+      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx",
+      "apps/web/src/app/b/[token]/page.tsx",
+      "apps/api/src/main.ts"
     ],
     "redVerificationPending": false
   },

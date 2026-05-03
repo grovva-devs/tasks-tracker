@@ -15,6 +15,7 @@ import { ArrowLeft, MoreVertical, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
 
 interface CardDetail {
   id: string;
@@ -44,7 +45,7 @@ export default function BoardDetailPage() {
       setSelectedCard(cardDetail);
       setPanelOpen(true);
     } catch {
-      // silently fail
+      toast.error("Failed to load card details");
     }
   };
 

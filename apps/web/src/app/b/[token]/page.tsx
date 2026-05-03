@@ -8,6 +8,7 @@ import { CardDetailPanel } from "@/components/board/card-detail-panel";
 import { usePublicSettings } from "@/providers/settings-provider";
 import { apiClient } from "@/lib/api-client";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 
 interface CardDetail {
   id: string;
@@ -37,6 +38,7 @@ export default function PublicBoardPage() {
       setPanelOpen(true);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load card details");
     }
   };
 

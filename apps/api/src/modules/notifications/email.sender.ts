@@ -4,29 +4,35 @@ import * as nodemailer from "nodemailer";
 
 @Injectable()
 export class EmailSender {
-  private transporter: nodemailer.Transporter;
+  private _transporter?: nodemailer.Transporter;
   private readonly logger = new Logger(EmailSender.name);
   private readonly fromAddress: string;
 
   constructor(private configService: ConfigService) {
     this.fromAddress = configService?.get<string>("EMAIL_FROM") ?? "noreply@onboardingtracker.com";
-    const smtpHost = configService?.get<string>("SMTP_HOST") ?? "";
-    const smtpPort = parseInt(configService?.get<string>("SMTP_PORT") ?? "465", 10);
-    const smtpUser = configService?.get<string>("SMTP_USER") ?? "";
-    const smtpPass = configService?.get<string>("SMTP_PASSWORD") ?? "";
+  }
 
-    // Only configure transport if SMTP is configured
-    if (smtpHost) {
-      this.transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: { user: smtpUser, pass: smtpPass },
-      });
-    } else {
-      // Stub transport for development / test without SMTP
-      this.transporter = nodemailer.createTransport({ jsonTransport: true } as any);
+  /** Lazy-initialize transport on first use, so constructor never fails */
+  private getTransporter(): nodemailer.Transporter {
+    if (!this._transporter) {
+      const smtpHost = this.configService?.get<string>("SMTP_HOST") ?? "";
+      if (smtpHost) {
+        const smtpPort = parseInt(this.configService?.get<string>("SMTP_PORT") ?? "465", 10);
+        this._transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465,
+          auth: {
+            user: this.configService?.get<string>("SMTP_USER") ?? "",
+            pass: this.configService?.get<string>("SMTP_PASSWORD") ?? "",
+          },
+        });
+      } else {
+        // Stub transport for development / test without SMTP
+        this._transporter = nodemailer.createTransport({ jsonTransport: true } as any);
+      }
     }
+    return this._transporter;
   }
 
   async sendBoardCompletionEmail(to: string, clientName: string, boardTitle: string, publicToken?: string): Promise<boolean> {
@@ -43,7 +49,7 @@ export class EmailSender {
       </div>`;
 
     try {
-      await this.transporter.sendMail({
+      await this.getTransporter().sendMail({
         from: this.fromAddress,
         to,
         subject: `✅ ${boardTitle} — Onboarding Complete!`,
@@ -65,7 +71,7 @@ export class EmailSender {
       </div>`;
 
     try {
-      await this.transporter.sendMail({
+      await this.getTransporter().sendMail({
         from: this.fromAddress,
         to,
         subject: `📋 Assigned: "${cardTitle}" on ${boardTitle}`,
@@ -88,7 +94,7 @@ export class EmailSender {
       </div>`;
 
     try {
-      await this.transporter.sendMail({
+      await this.getTransporter().sendMail({
         from: this.fromAddress,
         to,
         subject: `⏰ Overdue: "${cardTitle}" on ${boardTitle}`,

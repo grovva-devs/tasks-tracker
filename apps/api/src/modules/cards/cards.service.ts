@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and } from "drizzle-orm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
-import { cards, lists, cardComments, cardAttachments, cardAssignees, cardLabels } from "../../database/schema";
+import { cards, lists, boards, cardComments, cardAttachments, cardAssignees, cardLabels } from "../../database/schema";
 import { isCompletionList, EVENTS } from "@onboarding-tracker/shared";
 
 @Injectable()
@@ -164,12 +164,20 @@ export class CardsService {
 
     // Emit card.completed or card.moved event
     if (completedAt && isCompletionList(targetList.title)) {
+      // Fetch board publicToken for email notification
+      const [board] = await db
+        .select({ publicToken: boards.publicToken })
+        .from(boards)
+        .where(eq(boards.id, updated.boardId))
+        .limit(1);
+
       this.eventEmitter.emitAsync(EVENTS.CARD_COMPLETED, {
         cardId: updated.id,
         cardTitle: updated.title,
         boardId: updated.boardId,
         completedBy: updated.createdBy,
         listTitle: targetList.title,
+        publicToken: board?.publicToken,
       }).catch(() => {
         // Per rules/error-handle-async-errors.md — never let fire-and-forget crash
       });

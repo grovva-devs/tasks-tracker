@@ -29,7 +29,7 @@ export class DashboardService {
       activeBoards: active,
       completedBoards: completed,
       archivedBoards: total - active - completed,
-      avgCompletionPercentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+      completedBoardPercentage: total > 0 ? Math.round((completed / total) * 100) : 0,
     };
   }
 

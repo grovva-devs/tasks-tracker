@@ -30,7 +30,8 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/notifications/email.sender.ts"
+      "apps/api/src/modules/dashboard/dashboard.service.ts",
+      "apps/api/src/modules/cards/cards.service.ts"
     ],
     "redVerificationPending": false
   },

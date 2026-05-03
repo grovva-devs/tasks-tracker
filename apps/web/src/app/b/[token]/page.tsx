@@ -31,14 +31,12 @@ export default function PublicBoardPage() {
 
   const handleCardClick = async (cardId: string) => {
     try {
-      const cardDetail = await apiClient<CardDetail>(`/cards/${cardId}`);
-      // Filter to only client-visible content
-      cardDetail.comments = cardDetail.comments.filter((c: any) => c.visibility === "client");
-      cardDetail.attachments = cardDetail.attachments.filter((a: any) => a.visibility === "client");
+      // Use public endpoint that server-filters comments/attachments
+      const cardDetail = await apiClient<CardDetail>(`/boards/public/${token}/cards/${cardId}`);
       setSelectedCard(cardDetail);
       setPanelOpen(true);
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error(err);
     }
   };
 

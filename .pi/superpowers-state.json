@@ -30,7 +30,9 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/settings/settings.controller.ts"
+      "apps/api/src/modules/boards/boards.service.ts",
+      "apps/api/src/modules/boards/boards.controller.ts",
+      "apps/web/src/app/b/[token]/page.tsx"
     ],
     "redVerificationPending": false
   },

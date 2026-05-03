@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and, ilike, sql } from "drizzle-orm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
-import { boards, lists, cards } from "../../database/schema";
+import { boards, lists, cards, cardComments, cardAttachments } from "../../database/schema";
 import { generateSlug, EVENTS } from "@onboarding-tracker/shared";
 import * as crypto from "crypto";
 
@@ -213,6 +213,53 @@ export class BoardsService {
             completed: completedAt !== null,
           })),
       })),
+    };
+  }
+
+  /** Get a single card with only client-visible comments and attachments */
+  async findPublicCardDetail(cardId: string) {
+    const [card] = await db
+      .select({
+        id: cards.id, listId: cards.listId, boardId: cards.boardId,
+        publicId: cards.publicId, cardNumber: cards.cardNumber,
+        title: cards.title, description: cards.description, position: cards.position,
+        dueDate: cards.dueDate, completedAt: cards.completedAt,
+        createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+      })
+      .from(cards)
+      .where(eq(cards.id, cardId))
+      .limit(1);
+    if (!card) throw new NotFoundException("Card not found");
+
+    // Only client-visible comments
+    const comments = await db
+      .select({
+        id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
+        content: cardComments.content, visibility: cardComments.visibility,
+        createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
+      })
+      .from(cardComments)
+      .where(and(eq(cardComments.cardId, cardId), eq(cardComments.visibility, "client")))
+      .orderBy(cardComments.createdAt);
+
+    // Only client-visible attachments
+    const attachments = await db
+      .select({
+        id: cardAttachments.id, cardId: cardAttachments.cardId,
+        fileName: cardAttachments.fileName, fileUrl: cardAttachments.fileUrl,
+        fileSize: cardAttachments.fileSize, mimeType: cardAttachments.mimeType,
+        visibility: cardAttachments.visibility, createdAt: cardAttachments.createdAt,
+      })
+      .from(cardAttachments)
+      .where(and(eq(cardAttachments.cardId, cardId), eq(cardAttachments.visibility, "client")))
+      .orderBy(cardAttachments.createdAt);
+
+    return {
+      ...card,
+      completed: card.completedAt !== null,
+      labels: [],
+      comments,
+      attachments,
     };
   }
 

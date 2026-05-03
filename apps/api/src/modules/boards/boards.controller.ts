@@ -91,4 +91,11 @@ export class BoardsController {
   async findByPublicToken(@Param("token") token: string, @CurrentUser() user: any) {
     return this.boardsService.findPublicDetail(token);
   }
+
+  // PUBLIC ENDPOINT — single card with client-only content
+  @UseGuards(PublicBoardGuard)
+  @Get("public/:token/cards/:cardId")
+  async findPublicCardDetail(@Param("cardId") cardId: string) {
+    return this.boardsService.findPublicCardDetail(cardId);
+  }
 }

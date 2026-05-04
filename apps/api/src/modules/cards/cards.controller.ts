@@ -1,13 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Controller, Get, Post, Patch, Delete, Param, Body } from "@nestjs/common";
 import { CardsService } from "./cards.service";
+import { BoardMemberGuard } from "../../common/guards/board-member.guard";
+import { UseGuards } from "@nestjs/common";
 import { CreateCardDto, UpdateCardDto, MoveCardDto, ReorderCardsDto } from "../../common/dto/cards.dto";
 
-@UseGuards(JwtAuthGuard)
 @Controller()
 export class CardsController {
   constructor(private cardsService: CardsService) {}
 
+  @UseGuards(BoardMemberGuard)
   @Post("lists/:listId/cards")
   async create(
     @Param("listId") listId: string,
@@ -31,6 +32,7 @@ export class CardsController {
     return this.cardsService.update(id, body);
   }
 
+  @UseGuards(BoardMemberGuard)
   @Patch("cards/:id/move")
   async move(@Param("id") id: string, @Body() body: MoveCardDto) {
     return this.cardsService.moveCard(id, body.listId, body.position);
@@ -42,6 +44,7 @@ export class CardsController {
     return { success: true };
   }
 
+  @UseGuards(BoardMemberGuard)
   @Patch("lists/:listId/cards/reorder")
   async reorder(
     @Param("listId") listId: string,

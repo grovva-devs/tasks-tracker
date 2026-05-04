@@ -35,6 +35,8 @@ export class BoardsService {
       })
       .returning();
 
+    if (!board) throw new NotFoundException("Failed to create board");
+
     // Emit board.created event (fire-and-forget with .catch())
     this.eventEmitter.emitAsync(EVENTS.BOARD_CREATED, {
       boardId: board.id,
@@ -48,7 +50,7 @@ export class BoardsService {
     return board;
   }
 
-  async findAll(filters?: { status?: string; search?: string }) {
+  async findAll(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
     const conditions = [];
 
     if (filters?.status) {
@@ -58,7 +60,16 @@ export class BoardsService {
       conditions.push(ilike(boards.clientName, `%${filters.search}%`));
     }
 
-    const query = db
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const offset = (page - 1) * limit;
+
+    // Count total for pagination
+    const countQuery = db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(boards);
+    
+    const dataQuery = db
       .select({
         id: boards.id,
         title: boards.title,
@@ -70,13 +81,27 @@ export class BoardsService {
         createdAt: boards.createdAt,
         updatedAt: boards.updatedAt,
       })
-      .from(boards);
+      .from(boards)
+      .orderBy(boards.createdAt)
+      .limit(limit)
+      .offset(offset);
 
     if (conditions.length > 0) {
-      return query.where(and(...conditions)).orderBy(boards.createdAt);
+      const where = and(...conditions);
+      countQuery.where(where);
+      dataQuery.where(where);
     }
 
-    return query.orderBy(boards.createdAt);
+    const [countResult, data] = await Promise.all([countQuery, dataQuery]);
+    const total = countResult[0]?.count ?? 0;
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string) {

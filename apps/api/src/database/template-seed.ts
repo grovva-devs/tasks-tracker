@@ -23,44 +23,51 @@ async function seedTemplates() {
     })
     .returning();
 
-  if (saasTemplate) {
-    await db.insert(templateVariables).values([
-      { templateId: saasTemplate.id, key: "client_name", displayName: "Client Name", isRequired: true },
-      { templateId: saasTemplate.id, key: "service_type", displayName: "Service Type", defaultValue: "SaaS Standard", isRequired: false },
-      { templateId: saasTemplate.id, key: "start_date", displayName: "Project Start Date", isRequired: true },
-    ]).returning();
+  if (!saasTemplate) {
+    console.error("Failed to create SaaS template");
+    return;
+  }
 
-    // List: Setup
-    const [setupList] = await db
-      .insert(templateLists)
-      .values({ templateId: saasTemplate.id, title: "Setup {{client_name}}", position: 0 })
-      .returning();
+  await db.insert(templateVariables).values([
+    { templateId: saasTemplate.id, key: "client_name", displayName: "Client Name", isRequired: true },
+    { templateId: saasTemplate.id, key: "service_type", displayName: "Service Type", defaultValue: "SaaS Standard", isRequired: false },
+    { templateId: saasTemplate.id, key: "start_date", displayName: "Project Start Date", isRequired: true },
+  ]).returning();
 
+  // List: Setup
+  const [setupList] = await db
+    .insert(templateLists)
+    .values({ templateId: saasTemplate.id, title: "Setup {{client_name}}", position: 0 })
+    .returning();
+
+  if (setupList) {
     await db.insert(templateCards).values([
       { templateListId: setupList.id, title: "Welcome {{client_name}} — kick-off call", position: 0, dueDateOffsetDays: 0 },
       { templateListId: setupList.id, title: "Configure {{service_type}} environment", description: "Set up the {{service_type}} instance for {{client_name}}", position: 1, dueDateOffsetDays: 3 },
       { templateListId: setupList.id, title: "Send NDA and contracts", position: 2, dueDateOffsetDays: 2 },
     ]).returning();
+  }
 
-    // List: In Progress
-    const [progressList] = await db
-      .insert(templateLists)
-      .values({ templateId: saasTemplate.id, title: "In Progress", position: 1, color: "#3B82F6" })
-      .returning();
+  // List: In Progress
+  const [progressList] = await db
+    .insert(templateLists)
+    .values({ templateId: saasTemplate.id, title: "In Progress", position: 1, color: "#3B82F6" })
+    .returning();
 
+  if (progressList) {
     await db.insert(templateCards).values([
       { templateListId: progressList.id, title: "Training sessions for {{client_name}} team", position: 0, dueDateOffsetDays: 7 },
       { templateListId: progressList.id, title: "Data migration", position: 1, dueDateOffsetDays: 10 },
     ]).returning();
-
-    // List: Done
-    await db
-      .insert(templateLists)
-      .values({ templateId: saasTemplate.id, title: "Done", position: 2, color: "#22C55E" })
-      .returning();
-
-    console.log(`Created template: ${saasTemplate.name} (${saasTemplate.id})`);
   }
+
+  // List: Done
+  await db
+    .insert(templateLists)
+    .values({ templateId: saasTemplate.id, title: "Done", position: 2, color: "#22C55E" })
+    .returning();
+
+  console.log(`Created template: ${saasTemplate.name} (${saasTemplate.id})`);
 
   // Consulting Onboarding Template
   const [consultingTemplate] = await db
@@ -73,38 +80,45 @@ async function seedTemplates() {
     })
     .returning();
 
-  if (consultingTemplate) {
-    await db.insert(templateVariables).values([
-      { templateId: consultingTemplate.id, key: "client_name", displayName: "Client Name", isRequired: true },
-      { templateId: consultingTemplate.id, key: "engagement_type", displayName: "Engagement Type", defaultValue: "Advisory", isRequired: false },
-    ]).returning();
+  if (!consultingTemplate) {
+    console.error("Failed to create Consulting template");
+    return;
+  }
 
-    const [planningList] = await db
-      .insert(templateLists)
-      .values({ templateId: consultingTemplate.id, title: "Planning", position: 0 })
-      .returning();
+  await db.insert(templateVariables).values([
+    { templateId: consultingTemplate.id, key: "client_name", displayName: "Client Name", isRequired: true },
+    { templateId: consultingTemplate.id, key: "engagement_type", displayName: "Engagement Type", defaultValue: "Advisory", isRequired: false },
+  ]).returning();
 
+  const [planningList] = await db
+    .insert(templateLists)
+    .values({ templateId: consultingTemplate.id, title: "Planning", position: 0 })
+    .returning();
+
+  if (planningList) {
     await db.insert(templateCards).values([
       { templateListId: planningList.id, title: "Discovery meeting with {{client_name}}", position: 0, dueDateOffsetDays: 0 },
       { templateListId: planningList.id, title: "Scope definition for {{engagement_type}}", position: 1, dueDateOffsetDays: 5 },
     ]).returning();
+  }
 
-    const [activeList] = await db
-      .insert(templateLists)
-      .values({ templateId: consultingTemplate.id, title: "Active", position: 1, color: "#3B82F6" })
-      .returning();
+  const [activeList] = await db
+    .insert(templateLists)
+    .values({ templateId: consultingTemplate.id, title: "Active", position: 1, color: "#3B82F6" })
+    .returning();
 
+  if (activeList) {
     await db.insert(templateCards).values([
       { templateListId: activeList.id, title: "Weekly check-ins with {{client_name}}", position: 0, dueDateOffsetDays: 7 },
     ]).returning();
-
-    await db
-      .insert(templateLists)
-      .values({ templateId: consultingTemplate.id, title: "Concluído", position: 2, color: "#22C55E" })
-      .returning();
-
-    console.log(`Created template: ${consultingTemplate.name} (${consultingTemplate.id})`);
   }
+
+  await db
+    .insert(templateLists)
+    .values({ templateId: consultingTemplate.id, title: "Concluído", position: 2, color: "#22C55E" })
+    .returning();
+
+  console.log(`Created template: ${consultingTemplate.name} (${consultingTemplate.id})`);
 
   console.log("Template seed complete!");
 }

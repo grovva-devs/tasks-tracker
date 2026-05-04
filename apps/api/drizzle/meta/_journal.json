@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777906399278,
+      "tag": "0000_daily_psylocke",
+      "breakpoints": true
+    }
+  ]
+}

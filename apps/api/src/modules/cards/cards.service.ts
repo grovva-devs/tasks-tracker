@@ -1,25 +1,38 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql, max } from "drizzle-orm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
 import { cards, lists, boards, cardComments, cardAttachments, cardAssignees, cardLabels } from "../../database/schema";
 import { isCompletionList, EVENTS } from "@onboarding-tracker/shared";
+import * as crypto from "crypto";
 
 @Injectable()
 export class CardsService {
   constructor(private eventEmitter: EventEmitter2) {}
 
   async create(listId: string, boardId: string, data: { title: string; description?: string; dueDate?: string }) {
+    // Generate publicId and auto-increment cardNumber for the board
+    const publicId = crypto.randomBytes(4).toString("hex");
+    const [maxResult] = await db
+      .select({ maxNum: max(cards.cardNumber) })
+      .from(cards)
+      .where(eq(cards.boardId, boardId));
+    const cardNumber = (maxResult?.maxNum ?? 0) + 1;
+
     const [card] = await db
       .insert(cards)
       .values({
         listId,
         boardId,
+        publicId,
+        cardNumber,
         title: data.title,
         description: data.description ?? null,
         dueDate: data.dueDate ?? null,
       })
       .returning();
+
+    if (!card) throw new NotFoundException("Failed to create card");
 
     // Emit card.created event (fire-and-forget)
     this.eventEmitter.emitAsync(EVENTS.CARD_CREATED, {
@@ -162,6 +175,8 @@ export class CardsService {
       .where(eq(cards.id, id))
       .returning();
 
+    if (!updated) throw new NotFoundException("Card not found after update");
+
     // Emit card.completed or card.moved event
     if (completedAt && isCompletionList(targetList.title)) {
       // Fetch board publicToken for email notification
@@ -175,7 +190,7 @@ export class CardsService {
         cardId: updated.id,
         cardTitle: updated.title,
         boardId: updated.boardId,
-        completedBy: updated.createdBy,
+        completedBy: card.createdBy ?? updated.boardId,
         listTitle: targetList.title,
         publicToken: board?.publicToken,
       }).catch(() => {
@@ -199,11 +214,14 @@ export class CardsService {
   }
 
   async reorder(listId: string, items: { id: string; position: number }[]) {
-    for (const item of items) {
-      await db
-        .update(cards)
-        .set({ position: item.position })
-        .where(and(eq(cards.id, item.id), eq(cards.listId, listId)));
-    }
+    // Wrap in transaction for atomicity
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        await tx
+          .update(cards)
+          .set({ position: item.position })
+          .where(and(eq(cards.id, item.id), eq(cards.listId, listId)));
+      }
+    });
   }
 }

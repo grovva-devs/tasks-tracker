@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 export class PublicBoardGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = request.params.token;
+    const token = request.params.token as string;
 
     if (!token) {
       throw new NotFoundException("Board not found");

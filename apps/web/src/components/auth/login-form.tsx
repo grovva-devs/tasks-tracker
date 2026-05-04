@@ -23,6 +23,7 @@ export function LoginForm() {
     try {
       const result = await apiClient<{
         access_token: string;
+        refresh_token: string;
         user: { id: string; email: string; role: string; displayName: string };
       }>("/auth/login", {
         method: "POST",
@@ -30,6 +31,8 @@ export function LoginForm() {
       });
 
       setAuth(result.access_token, result.user as any);
+      // Store refresh token for session renewal
+      localStorage.setItem("refresh_token", result.refresh_token);
       // Set cookie for middleware
       document.cookie = `onboarding-tracker-auth=${result.access_token}; path=/; max-age=86400`;
       window.location.href = "/boards";

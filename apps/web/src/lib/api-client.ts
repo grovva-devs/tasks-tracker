@@ -6,6 +6,12 @@ interface FetchOptions extends Omit<RequestInit, "body"> {
   params?: Record<string, string>;
 }
 
+/** API response wrapper from TransformInterceptor */
+interface ApiResponse<T> {
+  data: T;
+  timestamp: string;
+}
+
 export async function apiClient<T>(
   endpoint: string,
   options: FetchOptions = {},
@@ -36,5 +42,13 @@ export async function apiClient<T>(
     throw new Error(error.message ?? `API Error: ${res.status}`);
   }
 
-  return res.json() as Promise<T>;
+  const json = await res.json();
+
+  // Unwrap TransformInterceptor response format: { data, timestamp }
+  // If the response has a `data` property and `timestamp`, it's wrapped
+  if (json && typeof json === "object" && "data" in json && "timestamp" in json) {
+    return (json as ApiResponse<T>).data;
+  }
+
+  return json as T;
 }

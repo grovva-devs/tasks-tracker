@@ -1,7 +1,6 @@
-import { Controller, Get, Patch, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Patch, Body } from "@nestjs/common";
 import { SettingsService } from "./settings.service";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
+import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { UpdateSettingsDto } from "../../common/dto/settings.dto";
 
@@ -9,19 +8,18 @@ import { UpdateSettingsDto } from "../../common/dto/settings.dto";
 export class SettingsController {
   constructor(private settingsService: SettingsService) {}
 
+  @Public()
   @Get("public")
   async getPublic() {
     return this.settingsService.getPublic();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("admin")
   @Get()
   async getFull() {
     return this.settingsService.getFull();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("admin")
   @Patch()
   async update(@Body() body: UpdateSettingsDto) {

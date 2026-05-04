@@ -1,10 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { BoardMemberGuard } from "../../common/guards/board-member.guard";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto, UpdateCommentDto } from "../../common/dto/comments.dto";
 
-@UseGuards(JwtAuthGuard)
 @Controller("cards/:cardId/comments")
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}

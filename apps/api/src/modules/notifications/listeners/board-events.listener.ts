@@ -1,7 +1,7 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Inject, Logger } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { NotificationsService } from "../notifications.service";
-import { EmailSender } from "../email.sender";
+import { EMAIL_SENDER, IEmailSender } from "../tokens/email-sender.token";
 import { EVENTS } from "@onboarding-tracker/shared";
 
 @Injectable()
@@ -10,7 +10,7 @@ export class BoardEventsListener {
 
   constructor(
     private notifService: NotificationsService,
-    private emailSender: EmailSender,
+    @Inject(EMAIL_SENDER) private emailSender: IEmailSender,
   ) {}
 
   @OnEvent(EVENTS.BOARD_CREATED)

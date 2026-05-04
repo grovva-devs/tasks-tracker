@@ -1,17 +1,28 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { eq, and } from "drizzle-orm";
+import sanitizeHtml from "sanitize-html";
 import { db } from "../../database/connection";
 import { cardComments } from "../../database/schema";
 
 @Injectable()
 export class CommentsService {
+  private readonly sanitizeOptions: sanitizeHtml.IOptions = {
+    allowedTags: ["b", "i", "em", "strong", "a", "p", "br", "ul", "ol", "li", "code", "pre"],
+    allowedAttributes: { a: ["href", "title"] },
+    disallowedTagsMode: "escape",
+  };
+
+  private sanitize(content: string): string {
+    return sanitizeHtml(content, this.sanitizeOptions);
+  }
+
   async create(cardId: string, authorId: string, data: { content: string; visibility: string }) {
     const [comment] = await db
       .insert(cardComments)
       .values({
         cardId,
         authorId,
-        content: data.content,
+        content: this.sanitize(data.content),
         visibility: data.visibility,
       })
       .returning();
@@ -57,7 +68,7 @@ export class CommentsService {
 
     const [updated] = await db
       .update(cardComments)
-      .set({ content, updatedAt: new Date() })
+      .set({ content: this.sanitize(content), updatedAt: new Date() })
       .where(eq(cardComments.id, id))
       .returning();
     return updated;

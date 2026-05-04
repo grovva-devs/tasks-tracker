@@ -1,10 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { templates, templateVariables, templateLists, templateCards } from "../../database/schema";
 import { resolveTemplateVariables } from "@onboarding-tracker/shared";
 import { validateRequiredVariables } from "./validators/template-variables.validator";
-import * as crypto from "crypto";
 
 @Injectable()
 export class TemplatesService {
@@ -17,89 +16,98 @@ export class TemplatesService {
     variables?: { key: string; displayName: string; defaultValue?: string; isRequired?: boolean }[];
     lists?: { title: string; color?: string; position: number; cards?: { title: string; description?: string; position: number; dueDateOffsetDays?: number }[] }[];
   }) {
-    const [template] = await db
-      .insert(templates)
-      .values({
-        name: data.name,
-        description: data.description ?? null,
-        categoryId: data.categoryId ?? null,
-        isDefault: data.isDefault ?? false,
-        createdBy: data.createdBy,
-      })
-      .returning();
+    // Wrap entire template creation in a transaction for atomicity
+    return db.transaction(async (tx) => {
+      const [template] = await tx
+        .insert(templates)
+        .values({
+          name: data.name,
+          description: data.description ?? null,
+          categoryId: data.categoryId ?? null,
+          isDefault: data.isDefault ?? false,
+          createdBy: data.createdBy,
+        })
+        .returning();
 
-    // Insert variables
-    if (data.variables && data.variables.length > 0) {
-      await db.insert(templateVariables).values(
-        data.variables.map((v) => ({
-          templateId: template.id,
-          key: v.key,
-          displayName: v.displayName,
-          defaultValue: v.defaultValue ?? null,
-          isRequired: v.isRequired ?? true,
-        })),
-      ).returning();
-    }
+      if (!template) throw new BadRequestException("Failed to create template");
 
-    // Insert lists and cards
-    if (data.lists && data.lists.length > 0) {
-      for (const listData of data.lists) {
-        const [list] = await db
-          .insert(templateLists)
-          .values({
+      // Insert variables
+      if (data.variables && data.variables.length > 0) {
+        await tx.insert(templateVariables).values(
+          data.variables.map((v) => ({
             templateId: template.id,
-            title: listData.title,
-            color: listData.color ?? null,
-            position: listData.position,
-          })
-          .returning();
+            key: v.key,
+            displayName: v.displayName,
+            defaultValue: v.defaultValue ?? null,
+            isRequired: v.isRequired ?? true,
+          })),
+        ).returning();
+      }
 
-        if (listData.cards && listData.cards.length > 0) {
-          await db.insert(templateCards).values(
-            listData.cards.map((cardData) => ({
-              templateListId: list.id,
-              title: cardData.title,
-              description: cardData.description ?? null,
-              position: cardData.position,
-              dueDateOffsetDays: cardData.dueDateOffsetDays ?? null,
-            })),
-          ).returning();
+      // Insert lists and cards
+      if (data.lists && data.lists.length > 0) {
+        for (const listData of data.lists) {
+          const [list] = await tx
+            .insert(templateLists)
+            .values({
+              templateId: template.id,
+              title: listData.title,
+              color: listData.color ?? null,
+              position: listData.position,
+            })
+            .returning();
+
+          if (!list) continue;
+
+          if (listData.cards && listData.cards.length > 0) {
+            await tx.insert(templateCards).values(
+              listData.cards.map((cardData) => ({
+                templateListId: list.id,
+                title: cardData.title,
+                description: cardData.description ?? null,
+                position: cardData.position,
+                dueDateOffsetDays: cardData.dueDateOffsetDays ?? null,
+              })),
+            ).returning();
+          }
         }
       }
-    }
 
-    return this.findOne(template.id);
+      // Fetch the complete template within the same transaction
+      return this.findOneInner(tx, template.id);
+    });
   }
 
   async findAll(categoryId?: string) {
-    const conditions = [];
     if (categoryId) {
-      conditions.push(eq(templates.categoryId, categoryId));
+      return db
+        .select({
+          id: templates.id, name: templates.name, description: templates.description,
+          categoryId: templates.categoryId, isDefault: templates.isDefault,
+          createdBy: templates.createdBy, createdAt: templates.createdAt, updatedAt: templates.updatedAt,
+        })
+        .from(templates)
+        .where(eq(templates.categoryId, categoryId))
+        .orderBy(templates.createdAt);
     }
 
-    let query = db
+    return db
       .select({
-        id: templates.id,
-        name: templates.name,
-        description: templates.description,
-        categoryId: templates.categoryId,
-        isDefault: templates.isDefault,
-        createdBy: templates.createdBy,
-        createdAt: templates.createdAt,
-        updatedAt: templates.updatedAt,
+        id: templates.id, name: templates.name, description: templates.description,
+        categoryId: templates.categoryId, isDefault: templates.isDefault,
+        createdBy: templates.createdBy, createdAt: templates.createdAt, updatedAt: templates.updatedAt,
       })
       .from(templates)
       .orderBy(templates.createdAt);
-
-    if (conditions.length > 0) {
-      query = query.where(eq(templates.categoryId, categoryId!));
-    }
-
-    return query;
   }
 
   async findOne(id: string) {
-    const [template] = await db
+    return this.findOneInner(db, id);
+  }
+
+  /** Inner method that works with both db and tx for transaction support */
+  private async findOneInner(queryDb: any, id: string) {
+    const [template] = await queryDb
       .select({
         id: templates.id, name: templates.name, description: templates.description,
         categoryId: templates.categoryId, isDefault: templates.isDefault,
@@ -111,7 +119,7 @@ export class TemplatesService {
 
     if (!template) throw new NotFoundException("Template not found");
 
-    const variables = await db
+    const variables = await queryDb
       .select({
         id: templateVariables.id, templateId: templateVariables.templateId,
         key: templateVariables.key, displayName: templateVariables.displayName,
@@ -120,30 +128,44 @@ export class TemplatesService {
       .from(templateVariables)
       .where(eq(templateVariables.templateId, id));
 
-    const templateLists = await db
+    const fetchedLists = await queryDb
       .select({
         id: templateLists.id, templateId: templateLists.templateId,
         title: templateLists.title, color: templateLists.color,
-        position: templateLists.position, createdAt: templateLists.createdAt,
+        position: templateLists.position,
       })
       .from(templateLists)
       .where(eq(templateLists.templateId, id))
       .orderBy(templateLists.position);
 
-    for (const list of templateLists) {
-      const listCards = await db
-        .select({
-          id: templateCards.id, templateListId: templateCards.templateListId,
-          title: templateCards.title, description: templateCards.description,
-          position: templateCards.position, dueDateOffsetDays: templateCards.dueDateOffsetDays,
-        })
-        .from(templateCards)
-        .where(eq(templateCards.templateListId, list.id))
-        .orderBy(templateCards.position);
-      (list as any).cards = listCards;
+    // Fix N+1: batch fetch all cards for all lists at once
+    const listIds = fetchedLists.map((l: any) => l.id);
+    const allCards = listIds.length > 0
+      ? await queryDb
+          .select({
+            id: templateCards.id, templateListId: templateCards.templateListId,
+            title: templateCards.title, description: templateCards.description,
+            position: templateCards.position, dueDateOffsetDays: templateCards.dueDateOffsetDays,
+          })
+          .from(templateCards)
+          .where(inArray(templateCards.templateListId, listIds))
+          .orderBy(templateCards.position)
+      : [];
+
+    // Map cards to their lists in memory
+    const cardsByList = new Map<string, any[]>();
+    for (const card of allCards) {
+      const listCards = cardsByList.get(card.templateListId) ?? [];
+      listCards.push(card);
+      cardsByList.set(card.templateListId, listCards);
     }
 
-    return { ...template, variables, lists: templateLists };
+    const listsWithCards = fetchedLists.map((list: any) => ({
+      ...list,
+      cards: cardsByList.get(list.id) ?? [],
+    }));
+
+    return { ...template, variables, lists: listsWithCards };
   }
 
   async update(id: string, data: { name?: string; description?: string; categoryId?: string; isDefault?: boolean }) {

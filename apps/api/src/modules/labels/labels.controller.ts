@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Controller, Get, Post, Delete, Param, Body } from "@nestjs/common";
 import { LabelsService } from "./labels.service";
 
-@UseGuards(JwtAuthGuard)
 @Controller("boards/:boardId/labels")
 export class LabelsController {
   constructor(private labelsService: LabelsService) {}

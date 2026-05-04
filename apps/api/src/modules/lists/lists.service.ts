@@ -49,11 +49,14 @@ export class ListsService {
   }
 
   async reorder(boardId: string, items: { id: string; position: number }[]) {
-    for (const item of items) {
-      await db
-        .update(lists)
-        .set({ position: item.position })
-        .where(eq(lists.id, item.id));
-    }
+    // Wrap in transaction for atomicity
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        await tx
+          .update(lists)
+          .set({ position: item.position })
+          .where(eq(lists.id, item.id));
+      }
+    });
   }
 }

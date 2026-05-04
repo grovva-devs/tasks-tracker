@@ -1,9 +1,7 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Controller, Get, Post, Delete, Param, Body } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AttachmentsService } from "./attachments.service";
 
-@UseGuards(JwtAuthGuard)
 @Controller("cards/:cardId/attachments")
 export class AttachmentsController {
   constructor(private attachmentsService: AttachmentsService) {}

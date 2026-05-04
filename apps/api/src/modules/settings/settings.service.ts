@@ -5,7 +5,18 @@ import { settings } from "../../database/schema";
 
 @Injectable()
 export class SettingsService {
+  // Simple in-memory cache for settings (singleton service, safe to cache)
+  private cachedSettings: any = null;
+  private cacheExpiry = 0;
+  private readonly CACHE_TTL_MS = 60_000; // 1 minute
+
   private async getOrCreate() {
+    // Return cached settings if still valid
+    const now = Date.now();
+    if (this.cachedSettings && now < this.cacheExpiry) {
+      return this.cachedSettings;
+    }
+
     const [existing] = await db
       .select({
         id: settings.id,
@@ -19,9 +30,15 @@ export class SettingsService {
       .from(settings)
       .limit(1);
 
-    if (existing) return existing;
+    if (existing) {
+      this.cachedSettings = existing;
+      this.cacheExpiry = now + this.CACHE_TTL_MS;
+      return existing;
+    }
 
     const [created] = await db.insert(settings).values({}).returning();
+    this.cachedSettings = created;
+    this.cacheExpiry = now + this.CACHE_TTL_MS;
     return created;
   }
 
@@ -41,6 +58,9 @@ export class SettingsService {
       .set({ ...data, updatedAt: new Date() })
       .where(eq(settings.id, s.id))
       .returning();
+    // Invalidate cache on update
+    this.cachedSettings = null;
+    this.cacheExpiry = 0;
     return updated;
   }
 }

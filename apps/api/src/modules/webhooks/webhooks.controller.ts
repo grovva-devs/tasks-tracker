@@ -1,13 +1,10 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Patch, Delete, Param, Body } from "@nestjs/common";
 import { WebhooksService } from "./webhooks.service";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { WebhookSender } from "../notifications/webhook.sender";
 import { CreateWebhookDto, UpdateWebhookDto } from "../../common/dto/webhooks.dto";
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles("admin")
 @Controller("webhooks")
 export class WebhooksController {

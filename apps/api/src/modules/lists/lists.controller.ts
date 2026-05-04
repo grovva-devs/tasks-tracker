@@ -1,24 +1,27 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Controller, Get, Post, Patch, Delete, Param, Body } from "@nestjs/common";
 import { ListsService } from "./lists.service";
+import { BoardMemberGuard } from "../../common/guards/board-member.guard";
+import { UseGuards } from "@nestjs/common";
 import { CreateListDto, UpdateListDto } from "../../common/dto/lists.dto";
 
-@UseGuards(JwtAuthGuard)
 @Controller("boards/:boardId/lists")
 export class ListsController {
   constructor(private listsService: ListsService) {}
 
   @Post()
+  @UseGuards(BoardMemberGuard)
   async create(@Param("boardId") boardId: string, @Body() body: CreateListDto) {
     return this.listsService.create(boardId, body);
   }
 
   @Get()
+  @UseGuards(BoardMemberGuard)
   async findAll(@Param("boardId") boardId: string) {
     return this.listsService.findByBoard(boardId);
   }
 
   @Patch("reorder")
+  @UseGuards(BoardMemberGuard)
   async reorder(
     @Param("boardId") boardId: string,
     @Body() body: { items: { id: string; position: number }[] },
@@ -28,11 +31,13 @@ export class ListsController {
   }
 
   @Patch(":id")
+  @UseGuards(BoardMemberGuard)
   async update(@Param("id") id: string, @Body() body: UpdateListDto) {
     return this.listsService.update(id, body);
   }
 
   @Delete(":id")
+  @UseGuards(BoardMemberGuard)
   async remove(@Param("id") id: string) {
     await this.listsService.remove(id);
     return { success: true };

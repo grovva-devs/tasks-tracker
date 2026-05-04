@@ -1,13 +1,25 @@
 import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
+import { ValidationPipe, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
+import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
+import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const logger = new Logger("Bootstrap");
+
+  // Security: Helmet for HTTP headers
+  app.use(helmet());
+
+  // CORS configuration from env
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       const allowed = [
-        process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000",
+        configService.get<string>("NEXT_PUBLIC_API_URL") ?? "http://localhost:3000",
         "http://localhost:3000",
       ];
       if (!origin || allowed.includes(origin)) {
@@ -18,14 +30,33 @@ async function bootstrap() {
     },
     credentials: true,
   });
+
   app.setGlobalPrefix("api");
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-    transformOptions: { enableImplicitConversion: true },
-  }));
-  await app.listen(process.env.API_PORT ?? 3001);
-  console.log(`API running on http://localhost:${process.env.API_PORT ?? 3001}`);
+
+  // Global pipes - validate all input with whitelist
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+
+  // Global exception filter for consistent error responses
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Global interceptors
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new TransformInterceptor(),
+  );
+
+  // Enable graceful shutdown hooks (for Kubernetes/Docker)
+  app.enableShutdownHooks();
+
+  const port = configService.get<number>("API_PORT") ?? 3001;
+  await app.listen(port);
+  logger.log(`API running on http://localhost:${port}`);
 }
 bootstrap();

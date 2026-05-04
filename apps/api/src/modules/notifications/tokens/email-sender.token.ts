@@ -1,4 +1,4 @@
-export const EMAIL_SENDER = Symbol("EMAIL_SENDER");
+export const EMAIL_SENDER = "EMAIL_SENDER";
 
 export interface IEmailSender {
   sendBoardCompletionEmail(to: string, clientName: string, boardTitle: string, publicToken?: string): Promise<boolean>;

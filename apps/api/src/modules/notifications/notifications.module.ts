@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { NotificationsService } from "./notifications.service";
 import { NotificationsController } from "./notifications.controller";
@@ -12,7 +11,7 @@ import { CardEventsListener } from "./listeners/card-events.listener";
 import { OverdueCronListener } from "./listeners/overdue-cron.listener";
 
 @Module({
-  imports: [EventEmitterModule.forRoot(), ScheduleModule.forRoot()],
+  imports: [ScheduleModule.forRoot()],
   providers: [
     NotificationsService,
     { provide: EMAIL_SENDER, useClass: EmailSender },

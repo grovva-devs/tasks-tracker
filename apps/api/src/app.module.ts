@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { TerminusModule } from "@nestjs/terminus";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./modules/auth/guards/roles.guard";
@@ -52,6 +53,7 @@ import { WebhooksModule } from "./modules/webhooks/webhooks.module";
         },
       ],
     }),
+    EventEmitterModule.forRoot(),
     TerminusModule,
     AuthModule,
     UsersModule,

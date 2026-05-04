@@ -1,4 +1,4 @@
-export const WEBHOOK_SENDER = Symbol("WEBHOOK_SENDER");
+export const WEBHOOK_SENDER = "WEBHOOK_SENDER";
 
 export interface IWebhookSender {
   send(url: string, secret: string, payload: object): Promise<boolean>;

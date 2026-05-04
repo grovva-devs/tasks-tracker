@@ -8,3 +8,8 @@ export class LoginDto {
   @MinLength(6)
   password!: string;
 }
+
+export class RefreshTokenDto {
+  @IsString()
+  refresh_token!: string;
+}

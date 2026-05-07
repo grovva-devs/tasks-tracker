@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { db } from "../../database/connection";
 import { boards, boardMembers } from "../../database/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 @Injectable()
 export class BoardMemberGuard implements CanActivate {
@@ -33,7 +33,7 @@ export class BoardMemberGuard implements CanActivate {
         `,
       })
       .from(boards)
-      .where(eq(boards.id, boardId))
+      .where(and(eq(boards.id, boardId), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
 
     if (!board) throw new NotFoundException("Board not found");

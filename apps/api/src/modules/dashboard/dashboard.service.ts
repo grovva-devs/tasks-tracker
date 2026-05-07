@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { boards } from "../../database/schema";
 
@@ -8,17 +8,18 @@ export class DashboardService {
   async getOverview() {
     const [totalResult] = await db
       .select({ count: sql<number>`count(*)::int` })
-      .from(boards);
+      .from(boards)
+      .where(sql`${boards.deletedAt} IS NULL`);
 
     const [activeResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(boards)
-      .where(eq(boards.status, "active"));
+      .where(and(eq(boards.status, "active"), sql`${boards.deletedAt} IS NULL`));
 
     const [completedResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(boards)
-      .where(eq(boards.status, "completed"));
+      .where(and(eq(boards.status, "completed"), sql`${boards.deletedAt} IS NULL`));
 
     const total = totalResult?.count ?? 0;
     const active = activeResult?.count ?? 0;
@@ -45,6 +46,7 @@ export class DashboardService {
         updatedAt: boards.updatedAt,
       })
       .from(boards)
+      .where(sql`${boards.deletedAt} IS NULL`)
       .orderBy(desc(boards.updatedAt))
       .limit(limit);
   }

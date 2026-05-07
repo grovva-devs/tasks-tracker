@@ -169,7 +169,7 @@ export class BoardsService {
         createdAt: lists.createdAt, updatedAt: lists.updatedAt,
       })
       .from(lists)
-      .where(eq(lists.boardId, id))
+      .where(and(eq(lists.boardId, id), sql`${lists.deletedAt} IS NULL`))
       .orderBy(lists.position);
 
     const boardCards = await db
@@ -181,7 +181,7 @@ export class BoardsService {
         createdBy: cards.createdBy, createdAt: cards.createdAt, updatedAt: cards.updatedAt,
       })
       .from(cards)
-      .where(eq(cards.boardId, id))
+      .where(and(eq(cards.boardId, id), sql`${cards.deletedAt} IS NULL`))
       .orderBy(cards.position);
 
     // Group cards by listId
@@ -210,7 +210,7 @@ export class BoardsService {
         clientEmail: boards.clientEmail, status: boards.status,
       })
       .from(boards)
-      .where(eq(boards.publicToken, token))
+      .where(and(eq(boards.publicToken, token), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
     if (!board) throw new NotFoundException("Board not found");
     return board;
@@ -225,7 +225,7 @@ export class BoardsService {
         status: boards.status, createdAt: boards.createdAt, updatedAt: boards.updatedAt,
       })
       .from(boards)
-      .where(eq(boards.publicToken, token))
+      .where(and(eq(boards.publicToken, token), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
     if (!board) throw new NotFoundException("Board not found");
 
@@ -236,7 +236,7 @@ export class BoardsService {
         createdAt: lists.createdAt, updatedAt: lists.updatedAt,
       })
       .from(lists)
-      .where(eq(lists.boardId, board.id))
+      .where(and(eq(lists.boardId, board.id), sql`${lists.deletedAt} IS NULL`))
       .orderBy(lists.position);
 
     const boardCards = await db
@@ -248,7 +248,7 @@ export class BoardsService {
         createdBy: cards.createdBy, createdAt: cards.createdAt, updatedAt: cards.updatedAt,
       })
       .from(cards)
-      .where(eq(cards.boardId, board.id))
+      .where(and(eq(cards.boardId, board.id), sql`${cards.deletedAt} IS NULL`))
       .orderBy(cards.position);
 
     // Only show client-visible data
@@ -335,8 +335,8 @@ export class BoardsService {
         completedCards: sql<number>`cast(count(${cards.id}) filter (where ${cards.completedAt} is not null) as integer)`,
       })
       .from(lists)
-      .leftJoin(cards, eq(lists.id, cards.listId))
-      .where(eq(lists.boardId, id));
+      .leftJoin(cards, and(eq(lists.id, cards.listId), sql`${cards.deletedAt} IS NULL`))
+      .where(and(eq(lists.boardId, id), sql`${lists.deletedAt} IS NULL`));
 
     const total = result[0]?.totalCards ?? 0;
     const completed = result[0]?.completedCards ?? 0;

@@ -35,12 +35,12 @@ export class AttachmentsService {
     const [attachment] = await db
       .select({ id: cardAttachments.id, uploadedBy: cardAttachments.uploadedBy })
       .from(cardAttachments)
-      .where(eq(cardAttachments.id, id))
+      .where(and(eq(cardAttachments.id, id), sql`${cardAttachments.deletedAt} IS NULL`))
       .limit(1);
     if (!attachment) throw new NotFoundException("Attachment not found");
     if (attachment.uploadedBy !== userId && userRole !== "admin") {
       throw new ForbiddenException("Only uploader or admin can delete");
     }
-    await db.delete(cardAttachments).where(eq(cardAttachments.id, id));
+    await db.update(cardAttachments).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(cardAttachments.id, id));
   }
 }

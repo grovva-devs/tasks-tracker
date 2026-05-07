@@ -17,7 +17,7 @@ export class CardMemberGuard implements CanActivate {
     const [card] = await db
       .select({ id: cards.id, boardId: cards.boardId })
       .from(cards)
-      .where(eq(cards.id, cardId))
+      .where(and(eq(cards.id, cardId), sql`${cards.deletedAt} IS NULL`))
       .limit(1);
 
     if (!card) throw new NotFoundException("Card not found");
@@ -41,7 +41,7 @@ export class CardMemberGuard implements CanActivate {
         `,
       })
       .from(boards)
-      .where(eq(boards.id, card.boardId))
+      .where(and(eq(boards.id, card.boardId), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
 
     if (!board) throw new NotFoundException("Board not found");

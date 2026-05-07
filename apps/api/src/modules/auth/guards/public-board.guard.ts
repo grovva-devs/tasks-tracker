@@ -7,7 +7,7 @@ import {
 import { Request } from "express";
 import { db } from "../../../database/connection";
 import { boards } from "../../../database/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 @Injectable()
 export class PublicBoardGuard implements CanActivate {
@@ -30,7 +30,7 @@ export class PublicBoardGuard implements CanActivate {
         status: boards.status,
       })
       .from(boards)
-      .where(eq(boards.publicToken, token))
+      .where(and(eq(boards.publicToken, token), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
 
     if (!result[0]) {

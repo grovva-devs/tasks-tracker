@@ -170,7 +170,7 @@ export class CardsService {
     const [targetList] = await db
       .select({ id: lists.id, title: lists.title, boardId: lists.boardId, position: lists.position })
       .from(lists)
-      .where(eq(lists.id, listId))
+      .where(and(eq(lists.id, listId), sql`${lists.deletedAt} IS NULL`))
       .limit(1);
     if (!targetList) throw new NotFoundException("Target list not found");
 
@@ -196,7 +196,7 @@ export class CardsService {
       const [board] = await db
         .select({ publicToken: boards.publicToken })
         .from(boards)
-        .where(eq(boards.id, updated.boardId))
+        .where(and(eq(boards.id, updated.boardId), sql`${boards.deletedAt} IS NULL`))
         .limit(1);
 
       this.eventEmitter.emitAsync(EVENTS.CARD_COMPLETED, {

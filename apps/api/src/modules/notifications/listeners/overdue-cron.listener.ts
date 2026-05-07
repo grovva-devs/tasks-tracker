@@ -3,7 +3,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../../database/connection";
 import { cards, lists, cardAssignees } from "../../../database/schema";
-import { lt, isNull, and, eq, inArray } from "drizzle-orm";
+import { lt, isNull, and, eq, inArray, sql } from "drizzle-orm";
 import { EVENTS } from "@onboarding-tracker/shared";
 
 @Injectable()
@@ -27,7 +27,7 @@ export class OverdueCronListener {
         })
         .from(cards)
         .innerJoin(lists, eq(cards.listId, lists.id))
-        .where(and(lt(cards.dueDate as any, today), isNull(cards.completedAt)));
+        .where(and(lt(cards.dueDate as any, today), isNull(cards.completedAt), sql`${cards.deletedAt} IS NULL`));
 
       if (overdueCards.length === 0) {
         this.logger.log("No overdue cards found");

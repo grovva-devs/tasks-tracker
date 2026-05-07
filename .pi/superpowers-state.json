@@ -30,9 +30,7 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/web/src/hooks/use-board-mutations.ts",
-      "apps/web/src/components/boards/board-actions-menu.tsx",
-      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx"
+      "apps/web/src/components/template/template-editor.tsx"
     ],
     "redVerificationPending": false
   },

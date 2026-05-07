@@ -27,7 +27,7 @@ interface ListState {
   title: string;
   position: number;
   color: string | null;
-  cards: { id: string; title: string; position: number; dueDateOffsetDays: number | null }[];
+  cards: { id: string; title: string; description?: string; position: number; dueDateOffsetDays: number | null }[];
 }
 
 export function TemplateEditor({ initialData, onSave, onCancel }: TemplateEditorProps) {
@@ -43,6 +43,7 @@ export function TemplateEditor({ initialData, onSave, onCancel }: TemplateEditor
       cards: l.cards.map((c, ci) => ({
         id: `card-${i}-${ci}`,
         title: c.title,
+        description: (c as any).description ?? "",
         position: c.position,
         dueDateOffsetDays: null,
       })),
@@ -71,7 +72,7 @@ export function TemplateEditor({ initialData, onSave, onCancel }: TemplateEditor
     setLists(
       lists.map((l) =>
         l.id === listId
-          ? { ...l, cards: [...l.cards, { id: `card-${Date.now()}`, title: "", position: l.cards.length, dueDateOffsetDays: null }] }
+          ? { ...l, cards: [...l.cards, { id: `card-${Date.now()}`, title: "", description: "", position: l.cards.length, dueDateOffsetDays: null }] }
           : l,
       ),
     );
@@ -110,6 +111,7 @@ export function TemplateEditor({ initialData, onSave, onCancel }: TemplateEditor
           .filter((c) => c.title)
           .map((c) => ({
             title: c.title,
+            description: c.description || undefined,
             position: c.position,
             dueDateOffsetDays: c.dueDateOffsetDays,
           })),
@@ -122,7 +124,7 @@ export function TemplateEditor({ initialData, onSave, onCancel }: TemplateEditor
     title: l.title,
     position: l.position,
     color: l.color,
-    cards: l.cards.map((c) => ({ title: c.title, position: c.position })),
+    cards: l.cards.map((c) => ({ title: c.title, description: c.description, position: c.position })),
   }));
 
   return (
@@ -177,23 +179,32 @@ export function TemplateEditor({ initialData, onSave, onCancel }: TemplateEditor
                 </div>
 
                 {list.cards.map((card) => (
-                  <div key={card.id} className="flex items-center gap-2 pl-4">
-                    <Input
-                      value={card.title}
-                      onChange={(e) => updateCard(list.id, card.id, { title: e.target.value })}
-                      placeholder="Card title"
-                      className="h-7 text-sm"
+                  <div key={card.id} className="pl-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={card.title}
+                        onChange={(e) => updateCard(list.id, card.id, { title: e.target.value })}
+                        placeholder="Card title"
+                        className="h-7 text-sm"
+                      />
+                      <Input
+                        type="number"
+                        value={card.dueDateOffsetDays ?? ""}
+                        onChange={(e) => updateCard(list.id, card.id, { dueDateOffsetDays: e.target.value ? parseInt(e.target.value) : null })}
+                        placeholder="Due offset (days)"
+                        className="h-7 w-28 text-sm"
+                      />
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeCard(list.id, card.id)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={card.description ?? ""}
+                      onChange={(e) => updateCard(list.id, card.id, { description: e.target.value })}
+                      placeholder="Card description..."
+                      className="text-xs min-h-[2.5rem]"
+                      rows={2}
                     />
-                    <Input
-                      type="number"
-                      value={card.dueDateOffsetDays ?? ""}
-                      onChange={(e) => updateCard(list.id, card.id, { dueDateOffsetDays: e.target.value ? parseInt(e.target.value) : null })}
-                      placeholder="Due offset (days)"
-                      className="h-7 w-28 text-sm"
-                    />
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeCard(list.id, card.id)}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
                   </div>
                 ))}
 

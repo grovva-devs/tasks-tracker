@@ -1,3 +1,5 @@
+import { parseApiError, handleApiError } from "./error-handler";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 interface FetchOptions extends Omit<RequestInit, "body"> {
@@ -75,7 +77,6 @@ export async function apiClient<T>(
   let res = await makeRequest(accessToken);
 
   if (res.status === 401) {
-    // Attempt refresh with promise lock to prevent multiple simultaneous refreshes
     if (!refreshPromise) {
       refreshPromise = doRefresh().finally(() => {
         refreshPromise = null;
@@ -85,7 +86,6 @@ export async function apiClient<T>(
     if (newToken) {
       res = await makeRequest(newToken);
     } else {
-      // Refresh failed — logout and redirect
       if (typeof window !== "undefined") {
         localStorage.removeItem("access_token");
         window.location.href = "/login";
@@ -95,7 +95,8 @@ export async function apiClient<T>(
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
+    const error = await parseApiError(res);
+    handleApiError(error);
     throw new Error(error.message ?? `API Error: ${res.status}`);
   }
 

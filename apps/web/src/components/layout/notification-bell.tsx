@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,12 +16,15 @@ interface Notification {
   type: string;
   isRead: boolean;
   createdAt: string;
+  boardId: string | null;
+  cardId: string | null;
 }
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const token = useAuthStore((s) => s.token);
+  const router = useRouter();
 
   useEffect(() => {
     if (!token) return;
@@ -53,6 +57,14 @@ export function NotificationBell() {
     setUnreadCount(0);
   };
 
+  const handleNotificationClick = async (n: Notification) => {
+    await markAsRead(n.id);
+    if (n.boardId) {
+      const cardQuery = n.cardId ? `?cardId=${n.cardId}` : "";
+      router.push(`/boards/${n.boardId}${cardQuery}`);
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger render={<Button variant="ghost" size="icon" className="relative" />} onClick={fetchNotifications}>
@@ -80,7 +92,7 @@ export function NotificationBell() {
               <div
                 key={n.id}
                 className="flex cursor-pointer items-start gap-2 border-b p-2 last:border-0 hover:bg-accent/50"
-                onClick={() => markAsRead(n.id)}
+                onClick={() => handleNotificationClick(n)}
               >
                 <div>
                   <p className="text-sm font-medium">{n.title}</p>

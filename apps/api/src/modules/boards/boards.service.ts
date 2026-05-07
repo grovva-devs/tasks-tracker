@@ -59,7 +59,7 @@ export class BoardsService {
   }
 
   async findAll(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
-    const conditions = [];
+    const conditions = [sql`${boards.deletedAt} IS NULL`];
 
     if (filters?.status) {
       conditions.push(eq(boards.status, filters.status));
@@ -72,12 +72,15 @@ export class BoardsService {
     const limit = filters?.limit ?? 20;
     const offset = (page - 1) * limit;
 
+    const where = and(...conditions);
+
     // Count total for pagination
-    const countQuery = db
+    const countResult = await db
       .select({ count: sql<number>`count(*)::int` })
-      .from(boards);
+      .from(boards)
+      .where(where);
     
-    const dataQuery = db
+    const data = await db
       .select({
         id: boards.id,
         title: boards.title,
@@ -90,17 +93,11 @@ export class BoardsService {
         updatedAt: boards.updatedAt,
       })
       .from(boards)
+      .where(where)
       .orderBy(boards.createdAt)
       .limit(limit)
       .offset(offset);
 
-    if (conditions.length > 0) {
-      const where = and(...conditions);
-      countQuery.where(where);
-      dataQuery.where(where);
-    }
-
-    const [countResult, data] = await Promise.all([countQuery, dataQuery]);
     const total = countResult[0]?.count ?? 0;
 
     return {
@@ -120,12 +117,13 @@ export class BoardsService {
         clientName: boards.clientName, clientEmail: boards.clientEmail,
         status: boards.status, templateId: boards.templateId,
         createdBy: boards.createdBy, position: boards.position,
+        deletedAt: boards.deletedAt,
         createdAt: boards.createdAt, updatedAt: boards.updatedAt,
       })
       .from(boards)
       .where(eq(boards.id, id))
       .limit(1);
-    if (!board) throw new NotFoundException("Board not found");
+    if (!board || board.deletedAt) throw new NotFoundException("Board not found");
     return board;
   }
 
@@ -329,5 +327,13 @@ export class BoardsService {
       completedCards: completed,
       completionPercentage: total === 0 ? 0 : Math.round((1.0 * completed / total) * 100),
     };
+  }
+
+  async archive(id: string, userId: string) {
+    return this.update(id, { status: "archived", updatedAt: new Date() });
+  }
+
+  async softDelete(id: string, userId: string) {
+    return this.update(id, { deletedAt: new Date(), deletedBy: userId, status: "archived", updatedAt: new Date() });
   }
 }

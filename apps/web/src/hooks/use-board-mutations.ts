@@ -101,6 +101,24 @@ export function useBoardMutations(boardId: string) {
     onSuccess: invalidateBoard,
   });
 
+  const updateBoard = useMutation({
+    mutationFn: (data: { title?: string; description?: string; clientName?: string; clientEmail?: string; status?: string }) =>
+      apiClient(`/boards/${boardId}`, { method: "PATCH", token: token!, body: data }),
+    onSuccess: invalidateBoard,
+  });
+
+  const archiveBoard = useMutation({
+    mutationFn: () =>
+      apiClient(`/boards/${boardId}/archive`, { method: "PATCH", token: token! }),
+    onSuccess: invalidateBoard,
+  });
+
+  const deleteBoard = useMutation({
+    mutationFn: () =>
+      apiClient(`/boards/${boardId}`, { method: "DELETE", token: token! }),
+    onSuccess: invalidateBoard,
+  });
+
   const reorderLists = useMutation({
     mutationFn: (items: { id: string; position: number }[]) =>
       apiClient(`/boards/${boardId}/lists/reorder`, { method: "PATCH", token: token!, body: { items } }),
@@ -114,6 +132,7 @@ export function useBoardMutations(boardId: string) {
     addAssignee, removeAssignee,
     createLabel, updateLabel, deleteLabel,
     addLabel, removeLabel,
+    updateBoard, archiveBoard, deleteBoard,
     reorderLists,
   };
 }

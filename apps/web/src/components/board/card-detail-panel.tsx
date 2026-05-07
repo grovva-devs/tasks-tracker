@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, UserPlus, Tag, X } from "lucide-react";
+import { Calendar, UserPlus, Tag, X, Pencil, Save } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import { CommentList } from "./comment-list";
 import { AttachmentList } from "./attachment-list";
@@ -68,6 +69,10 @@ export function CardDetailPanel({
   const [commentVisibility, setCommentVisibility] = useState("internal");
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
 
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
@@ -86,6 +91,29 @@ export function CardDetailPanel({
     setCommentText("");
   };
 
+  const startEditing = () => {
+    setEditTitle(card.title);
+    setEditDescription(card.description ?? "");
+    setEditDueDate(card.dueDate ?? "");
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    const changes: Record<string, string | null> = {};
+    if (editTitle !== card.title) changes.title = editTitle;
+    if (editDescription !== (card.description ?? "")) changes.description = editDescription;
+    if (editDueDate !== (card.dueDate ?? "")) changes.dueDate = editDueDate || null;
+
+    if (Object.keys(changes).length > 0) {
+      onUpdateCard?.(card.id, changes);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
   const visibleComments = publicView ? card.comments.filter((c: any) => c.visibility === "client") : card.comments;
   const visibleAttachments = publicView ? card.attachments.filter((a: any) => a.visibility === "client") : card.attachments;
 
@@ -101,11 +129,35 @@ export function CardDetailPanel({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             {isCompleted && <span className="text-green-500">✓</span>}
-            {card.title}
+            {isEditing ? (
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="flex-1"
+              />
+            ) : (
+              card.title
+            )}
           </SheetTitle>
         </SheetHeader>
 
         <div className="mt-4 space-y-4">
+          {/* Edit/Save Controls */}
+          {!readOnly && !publicView && (
+            <div className="flex gap-2">
+              {isEditing ? (
+                <>
+                  <Button size="sm" onClick={handleSave}><Save className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                  <Button size="sm" variant="outline" onClick={handleCancel}>Cancel</Button>
+                </>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={startEditing}>
+                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* Labels */}
           <div className="flex flex-wrap items-center gap-1">
             {card.labels.map((label) => (
@@ -210,22 +262,39 @@ export function CardDetailPanel({
           )}
 
           {/* Description */}
-          {card.description && (
-            <div>
-              <h4 className="text-sm font-medium mb-1">Description</h4>
+          <div>
+            <h4 className="text-sm font-medium mb-1">Description</h4>
+            {isEditing ? (
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={4}
+              />
+            ) : card.description ? (
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{card.description}</p>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No description</p>
+            )}
+          </div>
 
           {/* Due Date */}
-          {card.dueDate && (
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            {isEditing ? (
+              <input
+                type="date"
+                value={editDueDate}
+                onChange={(e) => setEditDueDate(e.target.value)}
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+              />
+            ) : card.dueDate ? (
               <span className={cn("text-sm", isOverdue && "text-destructive font-medium")}>
                 Due: {formatDate(card.dueDate)}
               </span>
-            </div>
-          )}
+            ) : (
+              <span className="text-sm text-muted-foreground italic">No due date</span>
+            )}
+          </div>
 
           <Separator />
 

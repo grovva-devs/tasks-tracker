@@ -33,4 +33,14 @@ export class UpdateBoardDto {
   @IsString()
   @MaxLength(20)
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  clientName?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  clientEmail?: string;
 }

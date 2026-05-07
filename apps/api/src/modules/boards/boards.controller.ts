@@ -76,10 +76,30 @@ export class BoardsController {
     return this.boardsService.update(id, body);
   }
 
-  @Roles("admin")
+  @UseGuards(BoardMemberGuard)
+  @Patch(":id/archive")
+  async archive(
+    @Param("id") id: string,
+    @CurrentUser() user: any,
+  ) {
+    const board = await this.boardsService.findOne(id);
+    if (user.role !== "admin" && board.createdBy !== user.id) {
+      throw new ForbiddenException("Only admin or board creator can archive");
+    }
+    return this.boardsService.archive(id, user.id);
+  }
+
+  @UseGuards(BoardMemberGuard)
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    await this.boardsService.update(id, { status: "archived" });
+  async remove(
+    @Param("id") id: string,
+    @CurrentUser() user: any,
+  ) {
+    const board = await this.boardsService.findOne(id);
+    if (user.role !== "admin" && board.createdBy !== user.id) {
+      throw new ForbiddenException("Only admin or board creator can delete");
+    }
+    await this.boardsService.softDelete(id, user.id);
     return { success: true };
   }
 

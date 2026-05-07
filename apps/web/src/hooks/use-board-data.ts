@@ -29,6 +29,7 @@ export interface BoardDetail {
   title: string;
   description: string | null;
   clientName: string;
+  clientEmail: string | null;
   status: string;
   publicToken: string;
   lists: ListData[];

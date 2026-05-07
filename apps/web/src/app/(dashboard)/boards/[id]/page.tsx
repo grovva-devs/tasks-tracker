@@ -8,12 +8,11 @@ import { KanbanBoard } from "@/components/board/kanban-board";
 import { CardDetailPanel } from "@/components/board/card-detail-panel";
 import { BoardMembersModal } from "@/components/boards/board-members-modal";
 import { LabelsManager } from "@/components/board/labels-manager";
+import { EditBoardModal } from "@/components/boards/edit-board-modal";
+import { BoardActionsMenu } from "@/components/boards/board-actions-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ArrowLeft, MoreVertical, Share2 } from "lucide-react";
+import { ArrowLeft, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { apiClient } from "@/lib/api-client";
@@ -87,6 +86,10 @@ export default function BoardDetailPage() {
     }
   };
 
+  const handleUpdateCard = (id: string, data: any) => {
+    mutations.updateCard.mutate({ id, ...data });
+  };
+
   if (isLoading) return <div className="animate-pulse h-96 bg-muted rounded-lg" />;
   if (!board) return <div>Board not found</div>;
 
@@ -108,20 +111,27 @@ export default function BoardDetailPage() {
         <div className="flex items-center gap-2">
           <LabelsManager boardId={boardId} />
           <BoardMembersModal boardId={boardId} />
+          <EditBoardModal
+            board={{
+              id: board.id,
+              title: board.title,
+              description: board.description,
+              clientName: board.clientName,
+              clientEmail: board.clientEmail,
+              status: board.status,
+            }}
+            onUpdate={(data) => mutations.updateBoard.mutate(data)}
+          />
           <Button variant="outline" size="sm" onClick={handleCopyPublicLink}>
             <Share2 className="mr-2 h-3.5 w-3.5" />
             Copy Public Link
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
-              <MoreVertical className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => apiClient(`/boards/${boardId}/regenerate-token`, { method: "PATCH", token: token! })} >
-                Regenerate public link
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <BoardActionsMenu
+            boardId={boardId}
+            boardTitle={board.title}
+            onArchive={() => mutations.archiveBoard.mutate()}
+            onDelete={() => mutations.deleteBoard.mutate()}
+          />
         </div>
       </div>
 
@@ -151,6 +161,7 @@ export default function BoardDetailPage() {
         }))}
         boardLabels={boardLabels}
         onAddComment={(cardId, content, visibility) => mutations.addComment.mutate({ cardId, content, visibility })}
+        onUpdateCard={handleUpdateCard}
         onAddAssignee={(cardId, userId) => mutations.addAssignee.mutate({ cardId, userId })}
         onRemoveAssignee={(cardId, userId) => mutations.removeAssignee.mutate({ cardId, userId })}
         onAddLabel={(cardId, labelId) => mutations.addLabel.mutate({ cardId, labelId })}

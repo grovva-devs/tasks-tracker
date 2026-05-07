@@ -30,10 +30,14 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/web/src/components/settings/email-tab.tsx",
-      "apps/web/src/app/(dashboard)/settings/page.tsx",
-      "apps/api/src/modules/settings/settings.controller.ts",
-      "apps/api/src/modules/settings/settings.module.ts"
+      "apps/api/src/database/schema/webhook-deliveries.ts",
+      "apps/api/src/database/schema/index.ts",
+      "apps/api/src/modules/notifications/webhook-delivery.service.ts",
+      "apps/api/src/modules/notifications/webhook.sender.ts",
+      "apps/api/src/modules/notifications/notifications.module.ts",
+      "apps/api/src/modules/webhooks/webhooks.controller.ts",
+      "apps/api/src/modules/webhooks/webhooks.module.ts",
+      "apps/web/src/components/settings/webhooks-tab.tsx"
     ],
     "redVerificationPending": false
   },

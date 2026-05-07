@@ -15,6 +15,7 @@ export { templateVariables, templateVariablesRelations } from "./template-variab
 export { templateLists, templateListsRelations } from "./template-lists";
 export { templateCards, templateCardsRelations } from "./template-cards";
 export { webhooks } from "./webhooks";
+export { webhookDeliveries, webhookDeliveriesRelations } from "./webhook-deliveries";
 export { notifications } from "./notifications";
 export { settings } from "./settings";
 export { boardActivities, boardActivitiesRelations } from "./board-activities";

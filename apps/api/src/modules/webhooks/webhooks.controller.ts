@@ -3,6 +3,7 @@ import { WebhooksService } from "./webhooks.service";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { WebhookSender } from "../notifications/webhook.sender";
+import { WebhookDeliveryService } from "../notifications/webhook-delivery.service";
 import { CreateWebhookDto, UpdateWebhookDto } from "../../common/dto/webhooks.dto";
 
 @Roles("admin")
@@ -11,6 +12,7 @@ export class WebhooksController {
   constructor(
     private webhooksService: WebhooksService,
     private webhookSender: WebhookSender,
+    private webhookDeliveryService: WebhookDeliveryService,
   ) {}
 
   @Get()
@@ -35,6 +37,11 @@ export class WebhooksController {
   async remove(@Param("id") id: string, @CurrentUser() user: any) {
     await this.webhooksService.remove(id, user.id);
     return { success: true };
+  }
+
+  @Get(":id/deliveries")
+  async getDeliveries(@Param("id") id: string) {
+    return this.webhookDeliveryService.findByWebhook(id, 10);
   }
 
   @Post(":id/test")

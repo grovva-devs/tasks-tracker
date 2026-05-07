@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import * as crypto from "crypto";
+import { WebhookDeliveryService } from "./webhook-delivery.service";
 
 export interface WebhookDeliveryResult {
   delivered: number;
@@ -10,6 +11,8 @@ export interface WebhookDeliveryResult {
 @Injectable()
 export class WebhookSender {
   private readonly logger = new Logger(WebhookSender.name);
+
+  constructor(private deliveryService: WebhookDeliveryService) {}
 
   async send(url: string, secret: string, payload: object): Promise<boolean> {
     const body = JSON.stringify(payload);
@@ -30,14 +33,46 @@ export class WebhookSender {
     return true;
   }
 
-  async sendWithRetry(url: string, secret: string, payload: object, maxRetries = 3): Promise<boolean> {
+  async sendWithRetry(
+    url: string,
+    secret: string,
+    payload: object,
+    webhookId: string,
+    event: string,
+    maxRetries = 3,
+  ): Promise<boolean> {
+    const payloadStr = JSON.stringify(payload);
+    let lastError: string | undefined;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.send(url, secret, payload);
+        await this.send(url, secret, payload);
+        await this.deliveryService.logDelivery({
+          webhookId,
+          event,
+          payload: payloadStr,
+          status: "delivered",
+          httpStatus: 200,
+          attempt,
+        });
+        return true;
       } catch (error) {
-        this.logger.warn(`Webhook attempt ${attempt}/${maxRetries} to ${url} failed: ${(error as Error).message}`);
-        if (attempt === maxRetries) throw error;
-        const delayMs = 100 * Math.pow(2, attempt - 1); // Exponential backoff: 100ms, 200ms, 400ms...
+        lastError = (error as Error).message;
+        this.logger.warn(`Webhook attempt ${attempt}/${maxRetries} to ${url} failed: ${lastError}`);
+
+        if (attempt === maxRetries) {
+          await this.deliveryService.logDelivery({
+            webhookId,
+            event,
+            payload: payloadStr,
+            status: "failed",
+            errorMessage: lastError,
+            attempt,
+          });
+          throw error;
+        }
+
+        const delayMs = 100 * Math.pow(2, attempt - 1);
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
@@ -58,7 +93,13 @@ export class WebhookSender {
 
     const results = await Promise.allSettled(
       matching.map((wh) =>
-        this.sendWithRetry(wh.url, wh.secret, { ...payload, _webhookId: wh.id, event, timestamp: new Date().toISOString() }),
+        this.sendWithRetry(
+          wh.url,
+          wh.secret,
+          { ...payload, _webhookId: wh.id, event, timestamp: new Date().toISOString() },
+          wh.id,
+          event,
+        ),
       ),
     );
 

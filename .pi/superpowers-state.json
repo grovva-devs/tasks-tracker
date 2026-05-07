@@ -30,8 +30,7 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/database/schema/settings.ts",
-      "apps/api/src/modules/settings/settings.service.ts"
+      "apps/web/src/lib/api-client.ts"
     ],
     "redVerificationPending": false
   },

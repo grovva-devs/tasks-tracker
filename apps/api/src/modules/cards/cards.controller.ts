@@ -53,4 +53,23 @@ export class CardsController {
     await this.cardsService.reorder(listId, body.items);
     return { success: true };
   }
+
+  @UseGuards(BoardMemberGuard)
+  @Post("cards/:id/assignees")
+  async addAssignee(
+    @Param("id") id: string,
+    @Body() body: { userId: string },
+  ) {
+    return this.cardsService.addAssignee(id, body.userId);
+  }
+
+  @UseGuards(BoardMemberGuard)
+  @Delete("cards/:id/assignees/:userId")
+  async removeAssignee(
+    @Param("id") id: string,
+    @Param("userId") userId: string,
+  ) {
+    await this.cardsService.removeAssignee(id, userId);
+    return { success: true };
+  }
 }

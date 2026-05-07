@@ -17,6 +17,7 @@ interface CardDetail {
   dueDate: string | null;
   completedAt: string | null;
   labels: { id: string; name: string; color: string }[];
+  assignees: { userId: string; displayName: string; email: string; avatarUrl?: string | null }[];
   comments: any[];
   attachments: any[];
 }

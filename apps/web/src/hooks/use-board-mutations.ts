@@ -59,15 +59,45 @@ export function useBoardMutations(boardId: string) {
     onSuccess: invalidateBoard,
   });
 
+  const addAssignee = useMutation({
+    mutationFn: ({ cardId, userId }: { cardId: string; userId: string }) =>
+      apiClient(`/cards/${cardId}/assignees`, { method: "POST", token: token!, body: { userId } }),
+    onSuccess: invalidateBoard,
+  });
+
+  const removeAssignee = useMutation({
+    mutationFn: ({ cardId, userId }: { cardId: string; userId: string }) =>
+      apiClient(`/cards/${cardId}/assignees/${userId}`, { method: "DELETE", token: token! }),
+    onSuccess: invalidateBoard,
+  });
+
   const addLabel = useMutation({
     mutationFn: ({ cardId, labelId }: { cardId: string; labelId: string }) =>
-      apiClient(`/cards/${cardId}/labels/${labelId}`, { method: "POST", token: token! }),
+      apiClient(`/boards/${boardId}/labels/cards/${cardId}/labels/${labelId}`, { method: "POST", token: token! }),
     onSuccess: invalidateBoard,
   });
 
   const removeLabel = useMutation({
     mutationFn: ({ cardId, labelId }: { cardId: string; labelId: string }) =>
-      apiClient(`/cards/${cardId}/labels/${labelId}`, { method: "DELETE", token: token! }),
+      apiClient(`/boards/${boardId}/labels/cards/${cardId}/labels/${labelId}`, { method: "DELETE", token: token! }),
+    onSuccess: invalidateBoard,
+  });
+
+  const createLabel = useMutation({
+    mutationFn: (data: { name: string; color: string }) =>
+      apiClient(`/boards/${boardId}/labels`, { method: "POST", token: token!, body: data }),
+    onSuccess: invalidateBoard,
+  });
+
+  const updateLabel = useMutation({
+    mutationFn: ({ id, ...data }: { id: string; name?: string; color?: string }) =>
+      apiClient(`/boards/${boardId}/labels/${id}`, { method: "PATCH", token: token!, body: data }),
+    onSuccess: invalidateBoard,
+  });
+
+  const deleteLabel = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/boards/${boardId}/labels/${id}`, { method: "DELETE", token: token! }),
     onSuccess: invalidateBoard,
   });
 
@@ -80,6 +110,10 @@ export function useBoardMutations(boardId: string) {
   return {
     addList, updateList, deleteList,
     addCard, updateCard, moveCard, deleteCard,
-    addComment, addLabel, removeLabel, reorderLists,
+    addComment,
+    addAssignee, removeAssignee,
+    createLabel, updateLabel, deleteLabel,
+    addLabel, removeLabel,
+    reorderLists,
   };
 }

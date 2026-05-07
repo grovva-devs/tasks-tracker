@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { labels, cardLabels } from "../../database/schema";
 
@@ -9,6 +9,15 @@ export class LabelsService {
     const [label] = await db
       .insert(labels)
       .values({ boardId, ...data })
+      .returning();
+    return label;
+  }
+
+  async update(id: string, data: { name?: string; color?: string }) {
+    const [label] = await db
+      .update(labels)
+      .set(data)
+      .where(eq(labels.id, id))
       .returning();
     return label;
   }
@@ -31,6 +40,6 @@ export class LabelsService {
   async removeCardLabel(cardId: string, labelId: string) {
     await db
       .delete(cardLabels)
-      .where(eq(cardLabels.cardId, cardId));
+      .where(and(eq(cardLabels.cardId, cardId), eq(cardLabels.labelId, labelId)));
   }
 }

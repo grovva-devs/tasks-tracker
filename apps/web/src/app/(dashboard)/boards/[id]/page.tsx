@@ -7,16 +7,34 @@ import { useBoardMutations } from "@/hooks/use-board-mutations";
 import { KanbanBoard } from "@/components/board/kanban-board";
 import { CardDetailPanel } from "@/components/board/card-detail-panel";
 import { BoardMembersModal } from "@/components/boards/board-members-modal";
+import { LabelsManager } from "@/components/board/labels-manager";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, MoreVertical, Share2, Users } from "lucide-react";
+import { ArrowLeft, MoreVertical, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+
+interface BoardMember {
+  boardId: string;
+  userId: string;
+  addedAt: string;
+  userEmail: string;
+  userDisplayName: string;
+  userAvatarUrl?: string | null;
+}
+
+interface BoardLabel {
+  id: string;
+  boardId: string;
+  name: string;
+  color: string;
+}
 
 interface CardDetail {
   id: string;
@@ -25,6 +43,7 @@ interface CardDetail {
   dueDate: string | null;
   completedAt: string | null;
   labels: { id: string; name: string; color: string }[];
+  assignees: { userId: string; displayName: string; email: string; avatarUrl?: string | null }[];
   comments: any[];
   attachments: any[];
 }
@@ -37,12 +56,24 @@ export default function BoardDetailPage() {
   const { data: board, isLoading } = useBoardData(boardId, token);
   const mutations = useBoardMutations(boardId);
 
+  const { data: boardMembers = [] } = useQuery({
+    queryKey: ["board-members", boardId],
+    queryFn: () => apiClient<BoardMember[]>(`/boards/${boardId}/members`, { token: token! }),
+    enabled: !!boardId,
+  });
+
+  const { data: boardLabels = [] } = useQuery({
+    queryKey: ["board-labels", boardId],
+    queryFn: () => apiClient<BoardLabel[]>(`/boards/${boardId}/labels`, { token: token! }),
+    enabled: !!boardId,
+  });
+
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
   const handleCardClick = async (cardId: string) => {
     try {
-      const cardDetail = await apiClient<CardDetail>(`/cards/${cardId}`, { token: token! });
+      const cardDetail = await apiClient<CardDetail>(`/cards/${cardId}/detail`, { token: token! });
       setSelectedCard(cardDetail);
       setPanelOpen(true);
     } catch {
@@ -75,6 +106,7 @@ export default function BoardDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <LabelsManager boardId={boardId} />
           <BoardMembersModal boardId={boardId} />
           <Button variant="outline" size="sm" onClick={handleCopyPublicLink}>
             <Share2 className="mr-2 h-3.5 w-3.5" />
@@ -85,7 +117,7 @@ export default function BoardDetailPage() {
               <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => apiClient(`/boards/${boardId}/regenerate-token`, { method: "PATCH", token: token! })}>
+              <DropdownMenuItem onClick={() => apiClient(`/boards/${boardId}/regenerate-token`, { method: "PATCH", token: token! })} >
                 Regenerate public link
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -111,7 +143,13 @@ export default function BoardDetailPage() {
         isOpen={panelOpen}
         onClose={() => { setPanelOpen(false); setSelectedCard(null); }}
         readOnly={false}
+        boardMembers={boardMembers}
+        boardLabels={boardLabels}
         onAddComment={(cardId, content, visibility) => mutations.addComment.mutate({ cardId, content, visibility })}
+        onAddAssignee={(cardId, userId) => mutations.addAssignee.mutate({ cardId, userId })}
+        onRemoveAssignee={(cardId, userId) => mutations.removeAssignee.mutate({ cardId, userId })}
+        onAddLabel={(cardId, labelId) => mutations.addLabel.mutate({ cardId, labelId })}
+        onRemoveLabel={(cardId, labelId) => mutations.removeLabel.mutate({ cardId, labelId })}
       />
     </div>
   );

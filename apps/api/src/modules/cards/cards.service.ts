@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and, sql, max } from "drizzle-orm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
-import { cards, lists, boards, cardComments, cardAttachments, cardAssignees, cardLabels } from "../../database/schema";
+import { cards, lists, boards, cardComments, cardAttachments, cardAssignees, cardLabels, users, labels as labelsTable } from "../../database/schema";
 import { isCompletionList, EVENTS } from "@onboarding-tracker/shared";
 import * as crypto from "crypto";
 
@@ -118,16 +118,27 @@ export class CardsService {
       .orderBy(cardAttachments.createdAt);
 
     const assignees = await db
-      .select({ cardId: cardAssignees.cardId, userId: cardAssignees.userId })
+      .select({
+        userId: cardAssignees.userId,
+        displayName: users.displayName,
+        email: users.email,
+        avatarUrl: users.avatarUrl,
+      })
       .from(cardAssignees)
+      .innerJoin(users, eq(cardAssignees.userId, users.id))
       .where(eq(cardAssignees.cardId, id));
 
-    const labels = await db
-      .select({ cardId: cardLabels.cardId, labelId: cardLabels.labelId })
+    const labelList = await db
+      .select({
+        id: labelsTable.id,
+        name: labelsTable.name,
+        color: labelsTable.color,
+      })
       .from(cardLabels)
+      .innerJoin(labelsTable, eq(cardLabels.labelId, labelsTable.id))
       .where(eq(cardLabels.cardId, id));
 
-    return { ...card, comments, attachments, assignees, labels };
+    return { ...card, comments, attachments, assignees, labels: labelList };
   }
 
   async update(id: string, data: { title?: string; description?: string; dueDate?: string | null }) {
@@ -223,5 +234,28 @@ export class CardsService {
           .where(and(eq(cards.id, item.id), eq(cards.listId, listId)));
       }
     });
+  }
+
+  async addAssignee(cardId: string, userId: string) {
+    const [assignee] = await db
+      .insert(cardAssignees)
+      .values({ cardId, userId })
+      .onConflictDoNothing()
+      .returning();
+
+    if (assignee) {
+      this.eventEmitter.emitAsync(EVENTS.CARD_ASSIGNED, {
+        cardId,
+        userId,
+      }).catch(() => {});
+    }
+
+    return assignee;
+  }
+
+  async removeAssignee(cardId: string, userId: string) {
+    await db
+      .delete(cardAssignees)
+      .where(and(eq(cardAssignees.cardId, cardId), eq(cardAssignees.userId, userId)));
   }
 }

@@ -18,6 +18,9 @@ const mockCard = {
     { id: "lbl-1", name: "Setup", color: "#3B82F6" },
     { id: "lbl-2", name: "Priority", color: "#EF4444" },
   ],
+  assignees: [
+    { userId: "u1", displayName: "Alice", email: "alice@example.com", avatarUrl: null },
+  ],
   comments: [
     { id: "cm-1", authorName: "Admin", content: "Started working on this", visibility: "internal", createdAt: "2025-04-28T10:00:00Z" },
     { id: "cm-2", authorName: "Admin", content: "Client can see this", visibility: "client", createdAt: "2025-04-29T10:00:00Z" },

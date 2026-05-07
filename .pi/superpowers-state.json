@@ -1,14 +1,14 @@
 {
   "workflow": {
     "phases": {
-      "brainstorm": "pending",
-      "plan": "pending",
-      "execute": "active",
-      "verify": "pending",
-      "review": "pending",
+      "brainstorm": "skipped",
+      "plan": "skipped",
+      "execute": "complete",
+      "verify": "skipped",
+      "review": "active",
       "finish": "pending"
     },
-    "currentPhase": "execute",
+    "currentPhase": "review",
     "artifacts": {
       "brainstorm": null,
       "plan": null,
@@ -20,7 +20,7 @@
     "prompted": {
       "brainstorm": false,
       "plan": false,
-      "execute": false,
+      "execute": true,
       "verify": false,
       "review": false,
       "finish": false
@@ -29,7 +29,12 @@
   "tdd": {
     "phase": "idle",
     "testFiles": [],
-    "sourceFiles": [],
+    "sourceFiles": [
+      "apps/api/src/modules/comments/comments.controller.ts",
+      "apps/api/src/modules/attachments/attachments.controller.ts",
+      "apps/web/src/components/board/comment-item.tsx",
+      "apps/web/src/hooks/use-board-mutations.ts"
+    ],
     "redVerificationPending": false
   },
   "debug": {
@@ -38,7 +43,7 @@
     "fixAttempts": 0
   },
   "verification": {
-    "verified": false,
+    "verified": true,
     "verificationWaived": false
   }
 }

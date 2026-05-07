@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards, ForbiddenException } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { BoardMemberGuard } from "../../common/guards/board-member.guard";
+import { CardMemberGuard } from "../../common/guards/card-member.guard";
 import { AttachmentsService } from "./attachments.service";
 
 @Controller("cards/:cardId/attachments")
-@UseGuards(BoardMemberGuard)
+@UseGuards(CardMemberGuard)
 export class AttachmentsController {
   constructor(private attachmentsService: AttachmentsService) {}
 

@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, ForbiddenException } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { BoardMemberGuard } from "../../common/guards/board-member.guard";
+import { CardMemberGuard } from "../../common/guards/card-member.guard";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto, UpdateCommentDto } from "../../common/dto/comments.dto";
 
 @Controller("cards/:cardId/comments")
-@UseGuards(BoardMemberGuard)
+@UseGuards(CardMemberGuard)
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
 

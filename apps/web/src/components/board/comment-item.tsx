@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,9 +40,14 @@ export function CommentItem({
   const [editContent, setEditContent] = useState(comment.content);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Reset deleting state when comment changes (mutation completed or failed)
+  useEffect(() => {
+    setIsDeleting(false);
+  }, [comment.id, comment.content, comment.updatedAt]);
+
   const canEdit = currentUserId === comment.authorId;
   const canDelete = currentUserId === comment.authorId || currentUserRole === "admin";
-  const wasEdited = comment.updatedAt !== comment.createdAt;
+  const wasEdited = new Date(comment.updatedAt).getTime() !== new Date(comment.createdAt).getTime();
 
   const handleSave = () => {
     if (editContent.trim() !== comment.content) {

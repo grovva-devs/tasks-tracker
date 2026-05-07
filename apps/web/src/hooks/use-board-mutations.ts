@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth";
+import { toast } from "sonner";
 
 export function useBoardMutations(boardId: string) {
   const queryClient = useQueryClient();
@@ -63,18 +64,21 @@ export function useBoardMutations(boardId: string) {
     mutationFn: ({ cardId, id, content }: { cardId: string; id: string; content: string }) =>
       apiClient(`/cards/${cardId}/comments/${id}`, { method: "PATCH", token: token!, body: { content } }),
     onSuccess: invalidateBoard,
+    onError: (err: any) => toast.error(err?.message || "Failed to update comment"),
   });
 
   const deleteComment = useMutation({
     mutationFn: ({ cardId, id }: { cardId: string; id: string }) =>
       apiClient(`/cards/${cardId}/comments/${id}`, { method: "DELETE", token: token! }),
     onSuccess: invalidateBoard,
+    onError: (err: any) => toast.error(err?.message || "Failed to delete comment"),
   });
 
   const deleteAttachment = useMutation({
     mutationFn: ({ cardId, id }: { cardId: string; id: string }) =>
       apiClient(`/cards/${cardId}/attachments/${id}`, { method: "DELETE", token: token! }),
     onSuccess: invalidateBoard,
+    onError: (err: any) => toast.error(err?.message || "Failed to delete attachment"),
   });
 
   const addAssignee = useMutation({

@@ -35,24 +35,45 @@ export class EmailSender {
     return this._transporter;
   }
 
+  private async renderReactEmail(templateModule: string, props: Record<string, unknown>): Promise<string | null> {
+    try {
+      const { render } = await import("@react-email/render");
+      const module = await import(templateModule);
+      const Template = module.default || module;
+      return await render(Template(props));
+    } catch (err) {
+      this.logger.warn(`React Email render failed for ${templateModule}: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   async sendBoardCompletionEmail(to: string, clientName: string, boardTitle: string, publicToken?: string): Promise<boolean> {
     const appUrl = this.configService.get<string>("NEXT_PUBLIC_API_URL") ?? "http://localhost:3000";
     const boardLink = publicToken ? `${appUrl}/b/${publicToken}` : null;
 
-    const html = `
+    let html = await this.renderReactEmail("./email.templates/board-completed", {
+      clientName,
+      boardTitle,
+      boardLink,
+    });
+
+    if (!html) {
+      // Fallback inline HTML
+      html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-        <h2>🎉 Onboarding Complete!</h2>
-        <p>Hello <strong>${clientName}</strong>,</p>
-        <p>Your onboarding for <strong>${boardTitle}</strong> has been completed.</p>
-        ${boardLink ? `<p><a href="${boardLink}" style="display:inline-block;padding:12px 24px;background:#3B82F6;color:white;text-decoration:none;border-radius:6px">View Progress</a></p>` : ""}
-        <p>Thank you for choosing us!</p>
+        <h2>✅ Onboarding Concluído!</h2>
+        <p>Olá <strong>${clientName}</strong>,</p>
+        <p>Seu onboarding para <strong>${boardTitle}</strong> foi concluído com sucesso.</p>
+        ${boardLink ? `<p><a href="${boardLink}" style="display:inline-block;padding:12px 24px;background:#3B82F6;color:white;text-decoration:none;border-radius:6px">Ver Progresso</a></p>` : ""}
+        <p>Obrigado por escolher nossa plataforma!</p>
       </div>`;
+    }
 
     try {
       await this.getTransporter().sendMail({
         from: this.fromAddress,
         to,
-        subject: `✅ ${boardTitle} — Onboarding Complete!`,
+        subject: `✅ ${boardTitle} — Onboarding Concluído!`,
         html,
       });
       return true;
@@ -62,19 +83,54 @@ export class EmailSender {
     }
   }
 
+  async sendBoardCreatedEmail(to: string, clientName: string, boardTitle: string, publicToken?: string): Promise<boolean> {
+    const appUrl = this.configService.get<string>("NEXT_PUBLIC_API_URL") ?? "http://localhost:3000";
+    const boardLink = publicToken ? `${appUrl}/b/${publicToken}` : null;
+
+    let html = await this.renderReactEmail("./email.templates/board-created", {
+      clientName,
+      boardTitle,
+      boardLink,
+    });
+
+    if (!html) {
+      html = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        <h2>🎉 Onboarding Iniciado!</h2>
+        <p>Olá <strong>${clientName}</strong>,</p>
+        <p>Seu quadro de onboarding <strong>${boardTitle}</strong> foi criado.</p>
+        ${boardLink ? `<p><a href="${boardLink}" style="display:inline-block;padding:12px 24px;background:#3B82F6;color:white;text-decoration:none;border-radius:6px">Acompanhar Progresso</a></p>` : ""}
+        <p>Obrigado por escolher nossa plataforma!</p>
+      </div>`;
+    }
+
+    try {
+      await this.getTransporter().sendMail({
+        from: this.fromAddress,
+        to,
+        subject: `🎉 ${boardTitle} — Onboarding Iniciado!`,
+        html,
+      });
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to send created email: ${(error as Error).message}`);
+      return false;
+    }
+  }
+
   async sendCardAssignedEmail(to: string, userName: string, cardTitle: string, boardTitle: string): Promise<boolean> {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-        <h2>📋 New Card Assigned</h2>
-        <p>Hi <strong>${userName}</strong>,</p>
-        <p>You've been assigned to <strong>${cardTitle}</strong> on <strong>${boardTitle}</strong>.</p>
+        <h2>📋 Novo Card Atribuído</h2>
+        <p>Olá <strong>${userName}</strong>,</p>
+        <p>Você foi atribuído ao card <strong>${cardTitle}</strong> no quadro <strong>${boardTitle}</strong>.</p>
       </div>`;
 
     try {
       await this.getTransporter().sendMail({
         from: this.fromAddress,
         to,
-        subject: `📋 Assigned: "${cardTitle}" on ${boardTitle}`,
+        subject: `📋 Atribuído: "${cardTitle}" em ${boardTitle}`,
         html,
       });
       return true;
@@ -87,17 +143,17 @@ export class EmailSender {
   async sendOverdueNotificationEmail(to: string, userName: string, cardTitle: string, boardTitle: string, dueDate: string): Promise<boolean> {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-        <h2>⏰ Overdue Card</h2>
-        <p>Hi <strong>${userName}</strong>,</p>
-        <p><strong>${cardTitle}</strong> on <strong>${boardTitle}</strong> is overdue.</p>
-        <p>Due date was: <strong>${dueDate}</strong></p>
+        <h2>⏰ Card Atrasado</h2>
+        <p>Olá <strong>${userName}</strong>,</p>
+        <p>O card <strong>${cardTitle}</strong> no quadro <strong>${boardTitle}</strong> está atrasado.</p>
+        <p>Data de vencimento: <strong>${dueDate}</strong></p>
       </div>`;
 
     try {
       await this.getTransporter().sendMail({
         from: this.fromAddress,
         to,
-        subject: `⏰ Overdue: "${cardTitle}" on ${boardTitle}`,
+        subject: `⏰ Atrasado: "${cardTitle}" em ${boardTitle}`,
         html,
       });
       return true;

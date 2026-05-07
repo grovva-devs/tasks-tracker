@@ -30,14 +30,10 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "packages/shared/src/constants/events.ts",
-      "apps/api/src/modules/comments/comments.service.ts",
-      "apps/api/src/modules/activities/listeners/activity.listener.ts",
-      "apps/api/src/modules/lists/lists.controller.ts",
-      "apps/api/src/modules/lists/lists.service.ts",
-      "apps/api/src/modules/dashboard/dashboard.service.ts",
-      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx",
-      "apps/web/src/components/board/activity-feed.tsx"
+      "apps/api/src/modules/notifications/email.templates/board-created.tsx",
+      "apps/api/src/modules/notifications/email.templates/board-completed.tsx",
+      "apps/api/src/modules/notifications/email.templates/card-completed.tsx",
+      "apps/api/src/modules/notifications/email.sender.ts"
     ],
     "redVerificationPending": false
   },

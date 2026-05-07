@@ -3,7 +3,6 @@
 import { useActivities } from "@/hooks/use-activities";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Activity, CheckCircle, MoveRight, MessageSquare, UserPlus, FileText } from "lucide-react";
 
 interface ActivityFeedProps {
@@ -53,7 +52,7 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
   }
 
   return (
-    <ScrollArea className="h-[400px]">
+    <div className="h-[400px] overflow-y-auto">
       <div className="space-y-3 p-4">
         {activities.map((activity) => (
           <div key={activity.id} className="flex items-start gap-3">
@@ -79,6 +78,6 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
           </div>
         ))}
       </div>
-    </ScrollArea>
+    </div>
   );
 }

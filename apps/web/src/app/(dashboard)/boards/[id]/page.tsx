@@ -177,6 +177,11 @@ export default function BoardDetailPage() {
         onAddLabel={(cardId, labelId) => mutations.addLabel.mutate({ cardId, labelId })}
         onRemoveLabel={(cardId, labelId) => mutations.removeLabel.mutate({ cardId, labelId })}
       />
+      {/* Activity Feed */}
+      <div className="rounded-lg border bg-card p-4">
+        <h2 className="text-lg font-semibold mb-4">Atividades</h2>
+        <ActivityFeed boardId={boardId} />
+      </div>
     </div>
   );
 }

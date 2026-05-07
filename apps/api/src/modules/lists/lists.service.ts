@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and, sql } from "drizzle-orm";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
 import { lists } from "../../database/schema";
+import { EVENTS } from "@onboarding-tracker/shared";
 
 @Injectable()
 export class ListsService {
+  constructor(private eventEmitter: EventEmitter2) {}
+
   async create(boardId: string, data: { title: string; color?: string; position?: number }) {
     const [list] = await db
       .insert(lists)
@@ -15,6 +19,15 @@ export class ListsService {
         position: data.position ?? 0,
       })
       .returning();
+
+    if (!list) throw new NotFoundException("Failed to create list");
+
+    this.eventEmitter.emitAsync(EVENTS.LIST_CREATED, {
+      boardId,
+      listId: list.id,
+      listTitle: list.title,
+    }).catch(() => {});
+
     return list;
   }
 

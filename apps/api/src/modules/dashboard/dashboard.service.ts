@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { db } from "../../database/connection";
-import { boards } from "../../database/schema";
+import { boards, boardActivities } from "../../database/schema";
 
 @Injectable()
 export class DashboardService {
@@ -37,17 +37,18 @@ export class DashboardService {
   async getRecentActivity(limit = 20) {
     return db
       .select({
-        id: boards.id,
-        title: boards.title,
-        slug: boards.slug,
-        clientName: boards.clientName,
-        status: boards.status,
-        position: boards.position,
-        updatedAt: boards.updatedAt,
+        id: boardActivities.id,
+        boardId: boardActivities.boardId,
+        boardTitle: boards.title,
+        boardSlug: boards.slug,
+        action: boardActivities.action,
+        description: boardActivities.description,
+        createdAt: boardActivities.createdAt,
       })
-      .from(boards)
+      .from(boardActivities)
+      .innerJoin(boards, eq(boardActivities.boardId, boards.id))
       .where(sql`${boards.deletedAt} IS NULL`)
-      .orderBy(desc(boards.updatedAt))
+      .orderBy(desc(boardActivities.createdAt))
       .limit(limit);
   }
 }

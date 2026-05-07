@@ -11,6 +11,8 @@ export const EVENTS = {
   CARD_OVERDUE: "card.overdue",
   CARD_DUE_SOON: "card.due_soon",
   CARD_ASSIGNED: "card.assigned",
+  COMMENT_ADDED: "comment.added",
+  LIST_CREATED: "list.created",
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];

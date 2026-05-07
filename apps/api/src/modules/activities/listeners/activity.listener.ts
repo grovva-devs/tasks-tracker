@@ -59,6 +59,16 @@ export class ActivityListener {
     await this.record("card.completed", payload, `Card "${payload.cardTitle}" completed`);
   }
 
+  @OnEvent(EVENTS.LIST_CREATED)
+  async onListCreated(payload: ActivityPayload) {
+    await this.record("list.created", payload, `List "${payload.listTitle}" created`);
+  }
+
+  @OnEvent(EVENTS.COMMENT_ADDED)
+  async onCommentAdded(payload: ActivityPayload) {
+    await this.record("comment.added", payload, `Comment added to card`);
+  }
+
   @OnEvent(EVENTS.CARD_ASSIGNED)
   async onCardAssigned(payload: ActivityPayload) {
     await this.record("card.assigned", payload, `Card "${payload.cardTitle}" assigned`);

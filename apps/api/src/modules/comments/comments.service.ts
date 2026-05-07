@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { eq, and, sql } from "drizzle-orm";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import sanitizeHtml from "sanitize-html";
 import { db } from "../../database/connection";
-import { cardComments } from "../../database/schema";
+import { cardComments, cards } from "../../database/schema";
+import { EVENTS } from "@onboarding-tracker/shared";
 
 @Injectable()
 export class CommentsService {
+  constructor(private eventEmitter: EventEmitter2) {}
+
   private readonly sanitizeOptions: sanitizeHtml.IOptions = {
     allowedTags: ["b", "i", "em", "strong", "a", "p", "br", "ul", "ol", "li", "code", "pre"],
     allowedAttributes: { a: ["href", "title"] },
@@ -17,6 +21,12 @@ export class CommentsService {
   }
 
   async create(cardId: string, authorId: string, data: { content: string; visibility: string }) {
+    const [card] = await db
+      .select({ boardId: cards.boardId })
+      .from(cards)
+      .where(and(eq(cards.id, cardId), sql`${cards.deletedAt} IS NULL`))
+      .limit(1);
+
     const [comment] = await db
       .insert(cardComments)
       .values({
@@ -26,6 +36,15 @@ export class CommentsService {
         visibility: data.visibility,
       })
       .returning();
+
+    if (card) {
+      this.eventEmitter.emitAsync(EVENTS.COMMENT_ADDED, {
+        cardId,
+        boardId: card.boardId,
+        userId: authorId,
+      }).catch(() => {});
+    }
+
     return comment;
   }
 

@@ -165,6 +165,8 @@ export default function BoardDetailPage() {
         onUpdateComment={(id, content) => selectedCard && mutations.updateComment.mutate({ cardId: selectedCard.id, id, content })}
         onDeleteComment={(id) => selectedCard && mutations.deleteComment.mutate({ cardId: selectedCard.id, id })}
         onDeleteAttachment={(id) => selectedCard && mutations.deleteAttachment.mutate({ cardId: selectedCard.id, id })}
+        onAddAttachment={() => { /* React Query refetch handles this */ }}
+        token={token || undefined}
         currentUserId={currentUser?.id}
         currentUserRole={currentUser?.role}
         onUpdateCard={handleUpdateCard}

@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { TerminusModule } from "@nestjs/terminus";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -55,6 +57,10 @@ import { WebhooksModule } from "./modules/webhooks/webhooks.module";
     }),
     EventEmitterModule.forRoot(),
     TerminusModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), "uploads"),
+      serveRoot: "/api/uploads",
+    }),
     AuthModule,
     UsersModule,
     BoardsModule,

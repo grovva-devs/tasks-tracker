@@ -17,6 +17,7 @@ import { Calendar, UserPlus, Tag, X, Pencil, Save } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import { CommentList } from "./comment-list";
 import { AttachmentList } from "./attachment-list";
+import { AttachmentUpload } from "./attachment-upload";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useClickOutside } from "@/hooks/use-click-outside";
 
@@ -42,6 +43,8 @@ interface CardDetailPanelProps {
   onDeleteAttachment?: (id: string) => void;
   onUpdateComment?: (id: string, content: string) => void;
   onDeleteComment?: (id: string) => void;
+  onAddAttachment?: (attachment: any) => void;
+  token?: string;
   currentUserId?: string;
   currentUserRole?: string;
   onUpdateCard?: (id: string, data: any) => void;
@@ -54,7 +57,8 @@ interface CardDetailPanelProps {
 export function CardDetailPanel({
   card, isOpen, onClose, readOnly, publicView,
   boardMembers = [], boardLabels = [],
-  onAddComment, onDeleteAttachment, onUpdateComment, onDeleteComment,
+  onAddComment, onDeleteAttachment, onUpdateComment, onDeleteComment, onAddAttachment,
+  token,
   currentUserId, currentUserRole,
   onUpdateCard,
   onAddAssignee, onRemoveAssignee, onAddLabel, onRemoveLabel,
@@ -356,8 +360,15 @@ export function CardDetailPanel({
               )}
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4">
-              <AttachmentList attachments={card.attachments} publicView={publicView} onDelete={onDeleteAttachment} />
+            <TabsContent value="attachments" className="mt-4 space-y-4">
+              {!readOnly && !publicView && onAddAttachment && (
+                <AttachmentUpload cardId={card.id} token={token!} onUploaded={onAddAttachment} />
+              )}
+              <AttachmentList
+                attachments={card.attachments}
+                publicView={publicView}
+                onDelete={onDeleteAttachment}
+              />
             </TabsContent>
           </Tabs>
         </div>

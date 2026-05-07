@@ -109,6 +109,24 @@ export class BoardsService {
     };
   }
 
+  async findDeleted() {
+    return db
+      .select({
+        id: boards.id,
+        title: boards.title,
+        slug: boards.slug,
+        publicId: boards.publicId,
+        clientName: boards.clientName,
+        status: boards.status,
+        deletedAt: boards.deletedAt,
+        deletedBy: boards.deletedBy,
+        createdAt: boards.createdAt,
+      })
+      .from(boards)
+      .where(sql`${boards.deletedAt} IS NOT NULL`)
+      .orderBy(boards.deletedAt);
+  }
+
   async findOne(id: string) {
     const [board] = await db
       .select({

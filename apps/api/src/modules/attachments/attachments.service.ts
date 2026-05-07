@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { db } from "../../database/connection";
 import { cardAttachments } from "../../database/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 @Injectable()
 export class AttachmentsService {
@@ -27,7 +27,7 @@ export class AttachmentsService {
         visibility: cardAttachments.visibility, createdAt: cardAttachments.createdAt,
       })
       .from(cardAttachments)
-      .where(eq(cardAttachments.cardId, cardId))
+      .where(and(eq(cardAttachments.cardId, cardId), sql`${cardAttachments.deletedAt} IS NULL`))
       .orderBy(cardAttachments.createdAt);
   }
 

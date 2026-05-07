@@ -42,6 +42,12 @@ export class BoardsController {
     });
   }
 
+  @Roles("admin")
+  @Get("deleted")
+  async findDeleted() {
+    return this.boardsService.findDeleted();
+  }
+
   @Post()
   async create(
     @Body() body: CreateBoardDto,

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { lists } from "../../database/schema";
 
@@ -30,7 +30,7 @@ export class ListsService {
         updatedAt: lists.updatedAt,
       })
       .from(lists)
-      .where(eq(lists.boardId, boardId))
+      .where(and(eq(lists.boardId, boardId), sql`${lists.deletedAt} IS NULL`))
       .orderBy(lists.position);
   }
 
@@ -44,8 +44,8 @@ export class ListsService {
     return list;
   }
 
-  async remove(id: string) {
-    await db.delete(lists).where(eq(lists.id, id));
+  async remove(id: string, userId: string) {
+    await db.update(lists).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(lists.id, id));
   }
 
   async reorder(boardId: string, items: { id: string; position: number }[]) {

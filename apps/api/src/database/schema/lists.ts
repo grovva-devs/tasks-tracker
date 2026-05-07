@@ -21,6 +21,7 @@ export const lists = pgTable(
     position: integer("position").notNull().default(0),
     color: varchar("color", { length: 7 }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: uuid("deleted_by"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@nestjs/common";
 import { LabelsService } from "./labels.service";
 import { BoardMemberGuard } from "../../common/guards/board-member.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 
 @Controller("boards/:boardId/labels")
 @UseGuards(BoardMemberGuard)
@@ -30,8 +31,8 @@ export class LabelsController {
   }
 
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    await this.labelsService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.labelsService.remove(id, user.id);
     return { success: true };
   }
 

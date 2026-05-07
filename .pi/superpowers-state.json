@@ -27,19 +27,37 @@
     }
   },
   "tdd": {
-    "phase": "idle",
-    "testFiles": [],
+    "phase": "green",
+    "testFiles": [
+      "apps/api/src/modules/labels/labels.service.spec.ts"
+    ],
     "sourceFiles": [
-      "apps/api/src/modules/comments/comments.controller.ts",
-      "apps/api/src/modules/attachments/attachments.controller.ts",
-      "apps/web/src/components/board/comment-item.tsx",
-      "apps/web/src/hooks/use-board-mutations.ts"
+      "apps/api/src/database/schema/labels.ts",
+      "apps/api/src/database/schema/templates.ts",
+      "apps/api/src/database/schema/template-categories.ts",
+      "apps/api/src/database/schema/webhooks.ts",
+      "apps/api/src/database/schema/users.ts",
+      "apps/api/src/database/schema/card-attachments.ts",
+      "apps/api/src/modules/lists/lists.service.ts",
+      "apps/api/src/modules/cards/cards.service.ts",
+      "apps/api/src/modules/comments/comments.service.ts",
+      "apps/api/src/modules/labels/labels.service.ts",
+      "apps/api/src/modules/templates/templates.service.ts",
+      "apps/api/src/database/schema/lists.ts",
+      "apps/api/src/database/schema/card-comments.ts",
+      "apps/api/src/modules/lists/lists.controller.ts",
+      "apps/api/src/modules/templates/templates.controller.ts",
+      "apps/api/src/modules/cards/cards.controller.ts",
+      "apps/api/src/modules/labels/labels.controller.ts",
+      "apps/api/src/modules/attachments/attachments.service.ts",
+      "apps/api/src/modules/boards/boards.controller.ts",
+      "apps/api/src/modules/boards/boards.service.ts"
     ],
     "redVerificationPending": false
   },
   "debug": {
     "active": false,
-    "investigated": false,
+    "investigated": true,
     "fixAttempts": 0
   },
   "verification": {

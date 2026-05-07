@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import sanitizeHtml from "sanitize-html";
 import { db } from "../../database/connection";
 import { cardComments } from "../../database/schema";
@@ -38,7 +38,7 @@ export class CommentsService {
           createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
         })
         .from(cardComments)
-        .where(and(eq(cardComments.cardId, cardId), eq(cardComments.visibility, visibility)))
+        .where(and(eq(cardComments.cardId, cardId), eq(cardComments.visibility, visibility), sql`${cardComments.deletedAt} IS NULL`))
         .orderBy(cardComments.createdAt);
     }
     return db
@@ -48,7 +48,7 @@ export class CommentsService {
         createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
       })
       .from(cardComments)
-      .where(eq(cardComments.cardId, cardId))
+      .where(and(eq(cardComments.cardId, cardId), sql`${cardComments.deletedAt} IS NULL`))
       .orderBy(cardComments.createdAt);
   }
 
@@ -86,6 +86,6 @@ export class CommentsService {
     if (comment.authorId !== userId && userRole !== "admin") {
       throw new ForbiddenException("Only author or admin can delete");
     }
-    await db.delete(cardComments).where(eq(cardComments.id, id));
+    await db.update(cardComments).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(cardComments.id, id));
   }
 }

@@ -64,8 +64,8 @@ export class TemplatesController {
 
   @Roles("admin")
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    await this.templatesService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.templatesService.remove(id, user.id);
     return { success: true };
   }
 }

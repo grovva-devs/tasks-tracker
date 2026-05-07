@@ -19,6 +19,8 @@ export const webhooks = pgTable("webhooks", {
   createdBy: uuid("created_by")
     .notNull()
     .references(() => users.id),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  deletedBy: uuid("deleted_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -77,9 +77,9 @@ describe("LabelsService", () => {
     expect(result?.name).toBe("Fixed");
   });
 
-  it("remove deletes a label", async () => {
-    const { whereFn } = setupDelete();
-    await service.remove("l1");
+  it("remove soft-deletes a label", async () => {
+    const { whereFn } = setupUpdateReturning([{ id: "l1", deletedAt: new Date(), deletedBy: "u1" }]);
+    await service.remove("l1", "u1");
     expect(whereFn).toHaveBeenCalled();
   });
 

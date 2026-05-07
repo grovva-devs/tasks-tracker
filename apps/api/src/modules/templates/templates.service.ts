@@ -207,8 +207,8 @@ export class TemplatesService {
     });
   }
 
-  async remove(id: string) {
-    await db.delete(templates).where(eq(templates.id, id));
+  async remove(id: string, userId: string) {
+    await db.update(templates).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(templates.id, id));
   }
 
   async applyTemplate(

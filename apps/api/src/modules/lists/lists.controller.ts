@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body } from "@nestjs/commo
 import { ListsService } from "./lists.service";
 import { BoardMemberGuard } from "../../common/guards/board-member.guard";
 import { UseGuards } from "@nestjs/common";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CreateListDto, UpdateListDto } from "../../common/dto/lists.dto";
 
 @Controller("boards/:boardId/lists")
@@ -38,8 +39,8 @@ export class ListsController {
 
   @Delete(":id")
   @UseGuards(BoardMemberGuard)
-  async remove(@Param("id") id: string) {
-    await this.listsService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.listsService.remove(id, user.id);
     return { success: true };
   }
 }

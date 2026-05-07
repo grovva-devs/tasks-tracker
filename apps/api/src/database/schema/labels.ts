@@ -18,6 +18,8 @@ export const labels = pgTable(
       .references(() => boards.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 50 }).notNull(),
     color: varchar("color", { length: 7 }).notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: uuid("deleted_by"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

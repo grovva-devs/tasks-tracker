@@ -26,6 +26,8 @@ export const cardAttachments = pgTable(
       .notNull()
       .references(() => users.id),
     visibility: varchar("visibility", { length: 10 }).notNull().default("client"),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: uuid("deleted_by"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

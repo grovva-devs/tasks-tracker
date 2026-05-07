@@ -29,6 +29,13 @@
       "when": 1778159628929,
       "tag": "0003_board_archived_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778166411503,
+      "tag": "0004_soft_delete_all_entities",
+      "breakpoints": true
     }
   ]
 }

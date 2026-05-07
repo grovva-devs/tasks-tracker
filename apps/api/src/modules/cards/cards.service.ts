@@ -60,7 +60,7 @@ export class CardsService {
         updatedAt: cards.updatedAt,
       })
       .from(cards)
-      .where(eq(cards.listId, listId))
+      .where(and(eq(cards.listId, listId), sql`${cards.deletedAt} IS NULL`))
       .orderBy(cards.position);
   }
 
@@ -75,7 +75,7 @@ export class CardsService {
         createdAt: cards.createdAt, updatedAt: cards.updatedAt,
       })
       .from(cards)
-      .where(eq(cards.id, id))
+      .where(and(eq(cards.id, id), sql`${cards.deletedAt} IS NULL`))
       .limit(1);
     if (!card) throw new NotFoundException("Card not found");
     return card;
@@ -93,7 +93,7 @@ export class CardsService {
           createdAt: cards.createdAt, updatedAt: cards.updatedAt,
         })
         .from(cards)
-        .where(eq(cards.id, id))
+        .where(and(eq(cards.id, id), sql`${cards.deletedAt} IS NULL`))
         .limit(1);
       if (!card) throw new NotFoundException("Card not found");
 
@@ -222,8 +222,8 @@ export class CardsService {
     return updated;
   }
 
-  async remove(id: string) {
-    await db.delete(cards).where(eq(cards.id, id));
+  async remove(id: string, userId: string) {
+    await db.update(cards).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(cards.id, id));
   }
 
   async reorder(listId: string, items: { id: string; position: number }[]) {

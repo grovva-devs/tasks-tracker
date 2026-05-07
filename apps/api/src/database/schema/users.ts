@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   displayName: varchar("display_name", { length: 255 }).notNull(),
   avatarUrl: varchar("avatar_url", { length: 500 }),
   role: varchar("role", { length: 20 }).notNull().default("member"),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

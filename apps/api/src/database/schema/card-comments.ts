@@ -23,6 +23,7 @@ export const cardComments = pgTable(
     content: text("content").notNull(),
     visibility: varchar("visibility", { length: 10 }).notNull().default("internal"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: uuid("deleted_by"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

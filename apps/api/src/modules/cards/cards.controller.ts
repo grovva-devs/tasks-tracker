@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from "@n
 import { CardsService } from "./cards.service";
 import { BoardMemberGuard } from "../../common/guards/board-member.guard";
 import { CardMemberGuard } from "../../common/guards/card-member.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CreateCardDto, UpdateCardDto, MoveCardDto, ReorderCardsDto } from "../../common/dto/cards.dto";
 
 @Controller()
@@ -43,8 +44,8 @@ export class CardsController {
 
   @UseGuards(CardMemberGuard)
   @Delete("cards/:id")
-  async remove(@Param("id") id: string) {
-    await this.cardsService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.cardsService.remove(id, user.id);
     return { success: true };
   }
 

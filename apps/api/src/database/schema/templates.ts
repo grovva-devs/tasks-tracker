@@ -27,6 +27,8 @@ export const templates = pgTable("templates", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  deletedBy: uuid("deleted_by"),
 });
 
 export const templatesRelations = relations(templates, ({ one, many }) => ({

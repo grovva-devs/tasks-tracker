@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { labels, cardLabels, cards } from "../../database/schema";
 
@@ -26,11 +26,11 @@ export class LabelsService {
     return db
       .select({ id: labels.id, boardId: labels.boardId, name: labels.name, color: labels.color })
       .from(labels)
-      .where(eq(labels.boardId, boardId));
+      .where(and(eq(labels.boardId, boardId), sql`${labels.deletedAt} IS NULL`));
   }
 
-  async remove(id: string) {
-    await db.delete(labels).where(eq(labels.id, id));
+  async remove(id: string, userId: string) {
+    await db.update(labels).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(labels.id, id));
   }
 
   async addCardLabel(cardId: string, labelId: string) {

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { users } from "../../database/schema";
 
@@ -18,7 +18,7 @@ export class UsersService {
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(eq(users.email, email))
+      .where(and(eq(users.email, email), sql`${users.deletedAt} IS NULL`))
       .limit(1);
     return result[0] ?? null;
   }
@@ -35,7 +35,7 @@ export class UsersService {
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(eq(users.id, id))
+      .where(and(eq(users.id, id), sql`${users.deletedAt} IS NULL`))
       .limit(1);
     return result[0] ?? null;
   }
@@ -67,7 +67,8 @@ export class UsersService {
         role: users.role,
         createdAt: users.createdAt,
       })
-      .from(users);
+      .from(users)
+      .where(sql`${users.deletedAt} IS NULL`);
   }
 
   async updateRole(id: string, role: string) {
@@ -85,6 +86,6 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    await db.delete(users).where(eq(users.id, id));
+    await db.update(users).set({ deletedAt: new Date() }).where(eq(users.id, id));
   }
 }

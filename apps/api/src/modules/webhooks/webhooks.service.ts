@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { webhooks } from "../../database/schema";
 import * as crypto from "crypto";
@@ -30,7 +30,8 @@ export class WebhooksService {
         createdBy: webhooks.createdBy,
         createdAt: webhooks.createdAt,
       })
-      .from(webhooks);
+      .from(webhooks)
+      .where(sql`${webhooks.deletedAt} IS NULL`);
   }
 
   async findOne(id: string) {
@@ -45,7 +46,7 @@ export class WebhooksService {
         createdAt: webhooks.createdAt,
       })
       .from(webhooks)
-      .where(eq(webhooks.id, id))
+      .where(and(eq(webhooks.id, id), sql`${webhooks.deletedAt} IS NULL`))
       .limit(1);
     return webhook;
   }
@@ -68,8 +69,8 @@ export class WebhooksService {
     return webhook;
   }
 
-  async remove(id: string) {
-    await db.delete(webhooks).where(eq(webhooks.id, id));
+  async remove(id: string, userId: string) {
+    await db.update(webhooks).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(webhooks.id, id));
   }
 
   async findActive() {
@@ -82,6 +83,6 @@ export class WebhooksService {
         isActive: webhooks.isActive,
       })
       .from(webhooks)
-      .where(eq(webhooks.isActive, true));
+      .where(and(eq(webhooks.isActive, true), sql`${webhooks.deletedAt} IS NULL`));
   }
 }

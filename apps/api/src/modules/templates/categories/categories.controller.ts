@@ -12,6 +12,7 @@ import { CategoriesService } from "./categories.service";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 @UseGuards(JwtAuthGuard)
 @Controller("template-categories")
@@ -56,8 +57,8 @@ export class CategoriesController {
   @Delete(":id")
   @UseGuards(RolesGuard)
   @Roles("admin")
-  async remove(@Param("id") id: string) {
-    await this.categoriesService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.categoriesService.remove(id, user.id);
     return { success: true };
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, sql } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { templates, templateVariables, templateLists, templateCards } from "../../database/schema";
 import { resolveTemplateVariables } from "@onboarding-tracker/shared";
@@ -87,7 +87,7 @@ export class TemplatesService {
           createdBy: templates.createdBy, createdAt: templates.createdAt, updatedAt: templates.updatedAt,
         })
         .from(templates)
-        .where(eq(templates.categoryId, categoryId))
+        .where(and(eq(templates.categoryId, categoryId), sql`${templates.deletedAt} IS NULL`))
         .orderBy(templates.createdAt);
     }
 
@@ -98,6 +98,7 @@ export class TemplatesService {
         createdBy: templates.createdBy, createdAt: templates.createdAt, updatedAt: templates.updatedAt,
       })
       .from(templates)
+      .where(sql`${templates.deletedAt} IS NULL`)
       .orderBy(templates.createdAt);
   }
 
@@ -114,7 +115,7 @@ export class TemplatesService {
         createdBy: templates.createdBy, createdAt: templates.createdAt, updatedAt: templates.updatedAt,
       })
       .from(templates)
-      .where(eq(templates.id, id))
+      .where(and(eq(templates.id, id), sql`${templates.deletedAt} IS NULL`))
       .limit(1);
 
     if (!template) throw new NotFoundException("Template not found");

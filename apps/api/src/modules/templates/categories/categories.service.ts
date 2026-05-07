@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../../database/connection";
 import { templateCategories } from "../../../database/schema";
 
@@ -27,6 +27,7 @@ export class CategoriesService {
         createdAt: templateCategories.createdAt,
       })
       .from(templateCategories)
+      .where(sql`${templateCategories.deletedAt} IS NULL`)
       .orderBy(templateCategories.position);
   }
 
@@ -40,7 +41,7 @@ export class CategoriesService {
         createdAt: templateCategories.createdAt,
       })
       .from(templateCategories)
-      .where(eq(templateCategories.id, id))
+      .where(and(eq(templateCategories.id, id), sql`${templateCategories.deletedAt} IS NULL`))
       .limit(1);
 
     if (!category) throw new NotFoundException("Category not found");
@@ -67,7 +68,7 @@ export class CategoriesService {
     }
   }
 
-  async remove(id: string) {
-    await db.delete(templateCategories).where(eq(templateCategories.id, id));
+  async remove(id: string, userId: string) {
+    await db.update(templateCategories).set({ deletedAt: new Date(), deletedBy: userId }).where(eq(templateCategories.id, id));
   }
 }

@@ -139,7 +139,7 @@ export class BoardsService {
         createdAt: boards.createdAt, updatedAt: boards.updatedAt,
       })
       .from(boards)
-      .where(eq(boards.id, id))
+      .where(and(eq(boards.id, id), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
     if (!board || board.deletedAt) throw new NotFoundException("Board not found");
     return board;
@@ -157,7 +157,7 @@ export class BoardsService {
         createdAt: boards.createdAt, updatedAt: boards.updatedAt,
       })
       .from(boards)
-      .where(eq(boards.id, id))
+      .where(and(eq(boards.id, id), sql`${boards.deletedAt} IS NULL`))
       .limit(1);
     if (!board || board.deletedAt) throw new NotFoundException("Board not found");
 

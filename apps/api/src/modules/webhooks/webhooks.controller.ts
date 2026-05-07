@@ -32,8 +32,8 @@ export class WebhooksController {
   }
 
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    await this.webhooksService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.webhooksService.remove(id, user.id);
     return { success: true };
   }
 

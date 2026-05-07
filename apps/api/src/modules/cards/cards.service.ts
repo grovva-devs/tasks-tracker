@@ -4,13 +4,22 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
 import { cards, lists, boards, cardComments, cardAttachments, cardAssignees, cardLabels, users, labels as labelsTable } from "../../database/schema";
 import { isCompletionList, EVENTS } from "@onboarding-tracker/shared";
+import { ActivitiesService } from "../activities/activities.service";
 import * as crypto from "crypto";
 
 @Injectable()
 export class CardsService {
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(
+    private eventEmitter: EventEmitter2,
+    private activitiesService: ActivitiesService,
+  ) {}
 
-  async create(listId: string, boardId: string, data: { title: string; description?: string; dueDate?: string }) {
+  async create(listId: string, boardId: string, data: {
+    title: string;
+    description?: string;
+    dueDate?: string;
+    createdBy?: string;
+  }) {
     // Generate publicId and auto-increment cardNumber for the board
     const publicId = crypto.randomBytes(4).toString("hex");
     const [maxResult] = await db
@@ -40,6 +49,7 @@ export class CardsService {
       cardTitle: card.title,
       boardId: card.boardId,
       listId: card.listId,
+      userId: data.createdBy,
     }).catch(() => {});
 
     return card;
@@ -153,7 +163,7 @@ export class CardsService {
     return card;
   }
 
-  async moveCard(id: string, listId: string, position: number) {
+  async moveCard(id: string, listId: string, position: number, userId: string) {
     const [card] = await db
       .select({
         id: cards.id, listId: cards.listId, boardId: cards.boardId,
@@ -163,7 +173,7 @@ export class CardsService {
         createdBy: cards.createdBy, createdAt: cards.createdAt, updatedAt: cards.updatedAt,
       })
       .from(cards)
-      .where(eq(cards.id, id))
+      .where(and(eq(cards.id, id), sql`${cards.deletedAt} IS NULL`))
       .limit(1);
     if (!card) throw new NotFoundException("Card not found");
 
@@ -175,6 +185,7 @@ export class CardsService {
     if (!targetList) throw new NotFoundException("Target list not found");
 
     let completedAt: Date | null = card.completedAt;
+    const wasCompleted = !!card.completedAt;
 
     if (isCompletionList(targetList.title)) {
       completedAt = new Date();
@@ -192,7 +203,6 @@ export class CardsService {
 
     // Emit card.completed or card.moved event
     if (completedAt && isCompletionList(targetList.title)) {
-      // Fetch board publicToken for email notification
       const [board] = await db
         .select({ publicToken: boards.publicToken })
         .from(boards)
@@ -203,12 +213,13 @@ export class CardsService {
         cardId: updated.id,
         cardTitle: updated.title,
         boardId: updated.boardId,
-        completedBy: card.createdBy ?? updated.boardId,
+        completedBy: userId,
         listTitle: targetList.title,
         publicToken: board?.publicToken,
-      }).catch(() => {
-        // Per rules/error-handle-async-errors.md — never let fire-and-forget crash
-      });
+      }).catch(() => {});
+
+      // Check if all cards on this board are completed
+      await this.checkBoardCompletion(updated.boardId, userId);
     } else {
       this.eventEmitter.emitAsync(EVENTS.CARD_MOVED, {
         cardId: updated.id,
@@ -216,10 +227,58 @@ export class CardsService {
         boardId: updated.boardId,
         listId,
         listTitle: targetList.title,
+        userId,
       }).catch(() => {});
+
+      // If card was completed and moved out of Done, check if board should revert to active
+      if (wasCompleted && !completedAt) {
+        await this.revertBoardIfActive(updated.boardId, userId);
+      }
     }
 
     return updated;
+  }
+
+  private async checkBoardCompletion(boardId: string, userId: string) {
+    const totalResult = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(cards)
+      .where(and(eq(cards.boardId, boardId), sql`${cards.deletedAt} IS NULL`));
+    const total = totalResult[0]?.total ?? 0;
+    if (total === 0) return;
+
+    const completedResult = await db
+      .select({ completed: sql<number>`count(*)::int` })
+      .from(cards)
+      .where(and(eq(cards.boardId, boardId), sql`${cards.completedAt} IS NOT NULL`, sql`${cards.deletedAt} IS NULL`));
+    const completed = completedResult[0]?.completed ?? 0;
+
+    if (total > 0 && total === completed) {
+      await db
+        .update(boards)
+        .set({ status: "completed", updatedAt: new Date() })
+        .where(eq(boards.id, boardId));
+
+      this.eventEmitter.emitAsync(EVENTS.BOARD_COMPLETED, {
+        boardId,
+        userId,
+      }).catch(() => {});
+    }
+  }
+
+  private async revertBoardIfActive(boardId: string, userId: string) {
+    const [board] = await db
+      .select({ id: boards.id, status: boards.status })
+      .from(boards)
+      .where(and(eq(boards.id, boardId), sql`${boards.deletedAt} IS NULL`))
+      .limit(1);
+
+    if (board?.status === "completed") {
+      await db
+        .update(boards)
+        .set({ status: "active", updatedAt: new Date() })
+        .where(eq(boards.id, boardId));
+    }
   }
 
   async remove(id: string, userId: string) {

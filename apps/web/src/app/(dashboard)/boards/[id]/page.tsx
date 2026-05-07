@@ -10,6 +10,7 @@ import { BoardMembersModal } from "@/components/boards/board-members-modal";
 import { LabelsManager } from "@/components/board/labels-manager";
 import { EditBoardModal } from "@/components/boards/edit-board-modal";
 import { BoardActionsMenu } from "@/components/boards/board-actions-menu";
+import { ActivityFeed } from "@/components/board/activity-feed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Share2 } from "lucide-react";

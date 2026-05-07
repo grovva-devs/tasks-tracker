@@ -27,17 +27,26 @@
     }
   },
   "tdd": {
-    "phase": "idle",
-    "testFiles": [],
+    "phase": "green",
+    "testFiles": [
+      "apps/api/src/modules/activities/activities.service.spec.ts"
+    ],
     "sourceFiles": [
-      "apps/api/src/modules/attachments/attachments.service.ts",
-      "apps/api/src/modules/notifications/listeners/overdue-cron.listener.ts",
-      "apps/api/src/modules/boards/boards.service.ts",
-      "apps/api/src/common/guards/board-member.guard.ts",
-      "apps/api/src/common/guards/card-member.guard.ts",
-      "apps/api/src/modules/auth/guards/public-board.guard.ts",
-      "apps/api/src/modules/dashboard/dashboard.service.ts",
-      "apps/api/src/modules/cards/cards.service.ts"
+      "apps/api/src/modules/activities/activities.service.ts",
+      "apps/api/src/modules/activities/activities.controller.ts",
+      "apps/api/src/modules/activities/activities.module.ts",
+      "apps/api/src/app.module.ts",
+      "apps/api/src/modules/cards/cards.service.ts",
+      "apps/api/src/modules/activities/listeners/activity.listener.ts",
+      "apps/api/src/common/dto/cards.dto.ts",
+      "apps/api/src/modules/cards/cards.controller.ts",
+      "apps/api/src/modules/notifications/listeners/due-soon-cron.listener.ts",
+      "apps/api/src/database/schema/cards.ts",
+      "packages/shared/src/constants/events.ts",
+      "apps/api/src/modules/notifications/notifications.module.ts",
+      "apps/web/src/hooks/use-activities.ts",
+      "apps/web/src/components/board/activity-feed.tsx",
+      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx"
     ],
     "redVerificationPending": false
   },
@@ -48,6 +57,6 @@
   },
   "verification": {
     "verified": true,
-    "verificationWaived": true
+    "verificationWaived": false
   }
 }

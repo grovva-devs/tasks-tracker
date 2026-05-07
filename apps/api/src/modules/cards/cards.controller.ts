@@ -14,8 +14,9 @@ export class CardsController {
   async create(
     @Param("listId") listId: string,
     @Body() body: CreateCardDto,
+    @CurrentUser() user: any,
   ) {
-    return this.cardsService.create(listId, body.boardId, body);
+    return this.cardsService.create(listId, body.boardId, { ...body, createdBy: user.id });
   }
 
   @UseGuards(CardMemberGuard)
@@ -38,8 +39,12 @@ export class CardsController {
 
   @UseGuards(BoardMemberGuard)
   @Patch("cards/:id/move")
-  async move(@Param("id") id: string, @Body() body: MoveCardDto) {
-    return this.cardsService.moveCard(id, body.listId, body.position);
+  async move(
+    @Param("id") id: string,
+    @Body() body: MoveCardDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.cardsService.moveCard(id, body.listId, body.position, user.id);
   }
 
   @UseGuards(CardMemberGuard)

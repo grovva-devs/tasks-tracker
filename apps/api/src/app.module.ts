@@ -23,6 +23,7 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { SettingsModule } from "./modules/settings/settings.module";
 import { WebhooksModule } from "./modules/webhooks/webhooks.module";
+import { ActivitiesModule } from "./modules/activities/activities.module";
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { WebhooksModule } from "./modules/webhooks/webhooks.module";
     DashboardModule,
     SettingsModule,
     WebhooksModule,
+    ActivitiesModule,
   ],
   controllers: [HealthController],
   providers: [

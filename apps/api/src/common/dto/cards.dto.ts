@@ -14,6 +14,10 @@ export class CreateCardDto {
 
   @IsUUID()
   boardId!: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
 }
 
 export class UpdateCardDto {

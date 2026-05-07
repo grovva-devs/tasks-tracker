@@ -9,6 +9,7 @@ import { WEBHOOK_SENDER } from "./tokens/webhook-sender.token";
 import { BoardEventsListener } from "./listeners/board-events.listener";
 import { CardEventsListener } from "./listeners/card-events.listener";
 import { OverdueCronListener } from "./listeners/overdue-cron.listener";
+import { DueSoonCronListener } from "./listeners/due-soon-cron.listener";
 
 @Module({
   imports: [ScheduleModule.forRoot()],
@@ -21,6 +22,7 @@ import { OverdueCronListener } from "./listeners/overdue-cron.listener";
     BoardEventsListener,
     CardEventsListener,
     OverdueCronListener,
+    DueSoonCronListener,
   ],
   controllers: [NotificationsController],
   exports: [NotificationsService, EMAIL_SENDER, WEBHOOK_SENDER],

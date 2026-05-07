@@ -32,6 +32,7 @@ export const cards = pgTable(
     position: integer("position").notNull().default(0),
     dueDate: date("due_date"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    dueSoonNotifiedAt: timestamp("due_soon_notified_at", { withTimezone: true }),
     createdBy: uuid("created_by").references(() => users.id),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     deletedBy: uuid("deleted_by"),

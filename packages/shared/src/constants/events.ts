@@ -9,6 +9,7 @@ export const EVENTS = {
   CARD_MOVED: "card.moved",
   CARD_COMPLETED: "card.completed",
   CARD_OVERDUE: "card.overdue",
+  CARD_DUE_SOON: "card.due_soon",
   CARD_ASSIGNED: "card.assigned",
 } as const;
 

@@ -58,7 +58,7 @@ export class WebhookSender {
 
     const results = await Promise.allSettled(
       matching.map((wh) =>
-        this.send(wh.url, wh.secret, { ...payload, _webhookId: wh.id, event, timestamp: new Date().toISOString() }),
+        this.sendWithRetry(wh.url, wh.secret, { ...payload, _webhookId: wh.id, event, timestamp: new Date().toISOString() }),
       ),
     );
 

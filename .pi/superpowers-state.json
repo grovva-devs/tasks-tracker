@@ -30,10 +30,7 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/attachments/attachments.module.ts",
-      "apps/api/src/modules/settings/settings.module.ts",
-      "apps/api/src/modules/settings/settings.controller.ts",
-      "apps/api/src/modules/attachments/s3-upload.service.ts"
+      "apps/api/src/modules/notifications/webhook.sender.ts"
     ],
     "redVerificationPending": false
   },

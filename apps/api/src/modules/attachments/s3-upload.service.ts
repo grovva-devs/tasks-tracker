@@ -87,6 +87,41 @@ export class S3UploadService {
     }
   }
 
+  async uploadLogo(file: UploadedFile, fileKey: string): Promise<{ fileUrl: string; fileKey: string }> {
+    if (this.useLocal) {
+      const filePath = path.join(this.localDir, fileKey);
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, file.buffer);
+      return {
+        fileUrl: `/api/uploads/${fileKey}`,
+        fileKey,
+      };
+    }
+
+    try {
+      await this.s3Client!.send(
+        new PutObjectCommand({
+          Bucket: this.bucket!,
+          Key: fileKey,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          ContentLength: file.size,
+        }),
+      );
+
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucket!,
+        Key: fileKey,
+      });
+
+      const presignedUrl = await getSignedUrl(this.s3Client!, getCommand, { expiresIn: 3600 });
+
+      return { fileUrl: presignedUrl, fileKey };
+    } catch (err: any) {
+      throw new BadRequestException(`S3 upload failed: ${err.message || "Unknown error"}`);
+    }
+  }
+
   isLocal(): boolean {
     return this.useLocal;
   }

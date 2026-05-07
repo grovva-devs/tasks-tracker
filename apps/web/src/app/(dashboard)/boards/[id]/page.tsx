@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useBoardData } from "@/hooks/use-board-data";
 import { useBoardMutations } from "@/hooks/use-board-mutations";
 import { KanbanBoard } from "@/components/board/kanban-board";
@@ -50,6 +50,7 @@ interface CardDetail {
 
 export default function BoardDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const boardId = params.id as string;
   const token = useAuthStore((s) => s.token);
   const currentUser = useAuthStore((s) => s.user);
@@ -73,7 +74,7 @@ export default function BoardDetailPage() {
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
-  const handleCardClick = async (cardId: string) => {
+  const handleCardClick = useCallback(async (cardId: string) => {
     try {
       const cardDetail = await apiClient<CardDetail>(`/cards/${cardId}/detail`, { token: token! });
       setSelectedCard(cardDetail);
@@ -81,7 +82,15 @@ export default function BoardDetailPage() {
     } catch {
       toast.error("Failed to load card details");
     }
-  };
+  }, [token]);
+
+  // Auto-open card detail from URL query param
+  useEffect(() => {
+    const cardId = searchParams.get("cardId");
+    if (cardId && token) {
+      handleCardClick(cardId);
+    }
+  }, [searchParams, token, handleCardClick]);
 
   const handleCopyPublicLink = () => {
     if (board) {
@@ -138,6 +147,7 @@ export default function BoardDetailPage() {
             boardTitle={board.title}
             onArchive={() => mutations.archiveBoard.mutate()}
             onDelete={() => mutations.deleteBoard.mutate()}
+            onRegenerateToken={() => mutations.regenerateToken.mutate()}
           />
         </div>
       </div>

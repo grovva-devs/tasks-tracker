@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Archive, Trash2 } from "lucide-react";
+import { MoreVertical, Archive, Trash2, KeyRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface BoardActionsMenuProps {
@@ -23,9 +23,10 @@ interface BoardActionsMenuProps {
   boardTitle: string;
   onArchive: () => void;
   onDelete: () => void;
+  onRegenerateToken?: () => void;
 }
 
-export function BoardActionsMenu({ boardId, boardTitle, onArchive, onDelete }: BoardActionsMenuProps) {
+export function BoardActionsMenu({ boardId, boardTitle, onArchive, onDelete, onRegenerateToken }: BoardActionsMenuProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -57,6 +58,11 @@ export function BoardActionsMenu({ boardId, boardTitle, onArchive, onDelete }: B
           <DropdownMenuItem onClick={() => openConfirm("archive")}>
             <Archive className="mr-2 h-4 w-4" /> Archive
           </DropdownMenuItem>
+          {onRegenerateToken && (
+            <DropdownMenuItem onClick={onRegenerateToken}>
+              <KeyRound className="mr-2 h-4 w-4" /> Regenerate Token
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => openConfirm("delete")} className="text-destructive">
             <Trash2 className="mr-2 h-4 w-4" /> Delete
           </DropdownMenuItem>

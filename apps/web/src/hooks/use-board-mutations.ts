@@ -147,6 +147,16 @@ export function useBoardMutations(boardId: string) {
     onSuccess: invalidateBoard,
   });
 
+  const regenerateToken = useMutation({
+    mutationFn: () =>
+      apiClient(`/boards/${boardId}/regenerate-token`, { method: "PATCH", token: token! }),
+    onSuccess: (data: any) => {
+      invalidateBoard();
+      toast.success("Public token regenerated");
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to regenerate token"),
+  });
+
   return {
     addList, updateList, deleteList,
     addCard, updateCard, moveCard, deleteCard,
@@ -157,5 +167,5 @@ export function useBoardMutations(boardId: string) {
     addLabel, removeLabel,
     updateBoard, archiveBoard, deleteBoard,
     reorderLists,
-  };
-}
+    regenerateToken,
+  };}

@@ -30,14 +30,9 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/database/schema/webhook-deliveries.ts",
-      "apps/api/src/database/schema/index.ts",
-      "apps/api/src/modules/notifications/webhook-delivery.service.ts",
-      "apps/api/src/modules/notifications/webhook.sender.ts",
-      "apps/api/src/modules/notifications/notifications.module.ts",
-      "apps/api/src/modules/webhooks/webhooks.controller.ts",
-      "apps/api/src/modules/webhooks/webhooks.module.ts",
-      "apps/web/src/components/settings/webhooks-tab.tsx"
+      "apps/web/src/hooks/use-board-mutations.ts",
+      "apps/web/src/components/boards/board-actions-menu.tsx",
+      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx"
     ],
     "redVerificationPending": false
   },

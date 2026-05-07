@@ -44,6 +44,9 @@ export function BoardCard({ board, stats }: BoardCardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-muted-foreground">
+            {board.description && (
+              <p className="line-clamp-1 text-xs">{board.description}</p>
+            )}
             <div className="flex items-center gap-2">
               <User className="h-3.5 w-3.5" />
               <span>{board.clientName}</span>

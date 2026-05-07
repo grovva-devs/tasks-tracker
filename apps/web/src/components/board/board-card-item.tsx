@@ -11,6 +11,7 @@ interface BoardCardItemProps {
     id: string;
     title: string;
     description: string | null;
+    cardNumber?: number;
     position: number;
     dueDate: string | null;
     completedAt: string | null;
@@ -41,6 +42,7 @@ export function BoardCardItem({ card, index, readOnly, onClick }: BoardCardItemP
         )}
         <p className={cn("text-sm font-medium", isCompleted && "line-through")}>
           {isCompleted && <CheckCircle2 className="mr-1 inline h-3.5 w-3.5 text-green-500" />}
+          <span className="text-muted-foreground mr-1">#{card.cardNumber ?? ""}</span>
           {card.title}
         </p>
         <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">

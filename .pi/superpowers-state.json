@@ -30,10 +30,10 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/dashboard/dashboard.service.ts",
-      "apps/api/src/modules/boards/boards.service.ts",
-      "apps/api/src/modules/users/users.controller.ts",
-      "apps/api/src/modules/users/users.service.ts"
+      "apps/web/src/components/boards/board-card.tsx",
+      "apps/web/src/app/(dashboard)/boards/[id]/page.tsx",
+      "apps/web/src/components/board/board-card-item.tsx",
+      "apps/web/src/components/board/card-detail-panel.tsx"
     ],
     "redVerificationPending": false
   },

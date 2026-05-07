@@ -86,6 +86,7 @@ export default function BoardDetailPage() {
   const handleCopyPublicLink = () => {
     if (board) {
       navigator.clipboard.writeText(`${window.location.origin}/b/${board.publicToken}`);
+      toast.success("Public link copied to clipboard");
     }
   };
 
@@ -107,6 +108,9 @@ export default function BoardDetailPage() {
           <div>
             <h1 className="text-xl font-bold">{board.title}</h1>
             <p className="text-sm text-muted-foreground">{board.clientName}</p>
+            {board.description && (
+              <p className="text-xs text-muted-foreground line-clamp-1 max-w-md">{board.description}</p>
+            )}
           </div>
           <Badge>{board.status}</Badge>
         </div>

@@ -26,6 +26,7 @@ interface CardDetailPanelProps {
     id: string;
     title: string;
     description: string | null;
+    cardNumber?: number;
     dueDate: string | null;
     completedAt: string | null;
     labels: { id: string; name: string; color: string }[];
@@ -142,7 +143,10 @@ export function CardDetailPanel({
                 className="flex-1"
               />
             ) : (
-              card.title
+              <>
+                <span className="text-muted-foreground text-sm">#{card.cardNumber ?? ""}</span>
+                {card.title}
+              </>
             )}
           </SheetTitle>
         </SheetHeader>

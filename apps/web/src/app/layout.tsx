@@ -1,3 +1,4 @@
+import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,9 +29,12 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans antialiased">
-        <TooltipProvider>{children}<Toaster /></TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>{children}<Toaster /></TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

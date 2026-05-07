@@ -9,8 +9,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { NotificationBell } from "./notification-bell";
+
+export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      aria-label="Toggle theme"
+    >
+      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </Button>
+  );
+}
 
 export function Header() {
   const { user, logout } = useAuthStore();
@@ -26,6 +41,7 @@ export function Header() {
       <div />
       <div className="flex items-center gap-4">
         <NotificationBell />
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-8 w-8 rounded-full" />}>
             <Avatar className="h-8 w-8">

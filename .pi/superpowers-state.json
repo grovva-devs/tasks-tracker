@@ -30,9 +30,9 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/web/src/lib/error-handler.ts",
-      "apps/web/src/lib/api-client.ts",
-      "apps/web/src/components/layout/notification-bell.tsx"
+      "apps/web/src/providers/theme-provider.tsx",
+      "apps/web/src/app/layout.tsx",
+      "apps/web/src/components/layout/header.tsx"
     ],
     "redVerificationPending": false
   },

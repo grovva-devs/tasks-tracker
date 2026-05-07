@@ -1,4 +1,4 @@
-import {pgTable, uuid, timestamp, primaryKey} from "drizzle-orm/pg-core";
+import {pgTable, uuid, timestamp, primaryKey, index} from "drizzle-orm/pg-core";
 import {relations} from "drizzle-orm";
 import {boards} from "./boards";
 import {users} from "./users";
@@ -16,7 +16,10 @@ export const boardMembers = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [primaryKey({columns: [table.boardId, table.userId]})],
+  (table) => [
+    primaryKey({columns: [table.boardId, table.userId]}),
+    index("board_members_user_id_idx").on(table.userId),
+  ],
 );
 
 export const boardMembersRelations = relations(boardMembers, ({one}) => ({

@@ -2,17 +2,13 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, and, ilike, sql } from "drizzle-orm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { db } from "../../database/connection";
-import { boards, lists, cards, cardComments, cardAttachments } from "../../database/schema";
+import { boards, lists, cards, cardComments, cardAttachments, boardMembers } from "../../database/schema";
 import { generateSlug, EVENTS } from "@onboarding-tracker/shared";
 import * as crypto from "crypto";
-import { BoardMembersService } from "./board-members.service";
 
 @Injectable()
 export class BoardsService {
-  constructor(
-    private eventEmitter: EventEmitter2,
-    private boardMembersService: BoardMembersService,
-  ) {}
+  constructor(private eventEmitter: EventEmitter2) {}
   async create(data: {
     title: string;
     clientName: string;
@@ -24,37 +20,42 @@ export class BoardsService {
     const slug = generateSlug(data.title) + "-" + crypto.randomBytes(2).toString("hex");
     const publicToken = crypto.randomBytes(24).toString("hex");
 
-    const [board] = await db
-      .insert(boards)
-      .values({
-        title: data.title,
-        description: data.description ?? null,
-        slug,
-        publicId: crypto.randomBytes(6).toString("hex"),
-        publicToken,
-        clientName: data.clientName,
-        clientEmail: data.clientEmail ?? null,
+    return db.transaction(async (tx) => {
+      const [board] = await tx
+        .insert(boards)
+        .values({
+          title: data.title,
+          description: data.description ?? null,
+          slug,
+          publicId: crypto.randomBytes(6).toString("hex"),
+          publicToken,
+          clientName: data.clientName,
+          clientEmail: data.clientEmail ?? null,
+          createdBy: data.createdBy,
+          templateId: data.templateId ?? null,
+        })
+        .returning();
+
+      if (!board) throw new NotFoundException("Failed to create board");
+
+      // Auto-register creator as board member (atomically within transaction)
+      await tx
+        .insert(boardMembers)
+        .values({ boardId: board.id, userId: data.createdBy })
+        .onConflictDoNothing();
+
+      // Event emission outside transaction (fire-and-forget)
+      this.eventEmitter.emitAsync(EVENTS.BOARD_CREATED, {
+        boardId: board.id,
+        boardTitle: board.title,
         createdBy: data.createdBy,
-        templateId: data.templateId ?? null,
-      })
-      .returning();
+        teamMemberIds: [data.createdBy],
+      }).catch((err: Error) => {
+        // Per rules/error-handle-async-errors.md — never let fire-and-forget crash
+      });
 
-    if (!board) throw new NotFoundException("Failed to create board");
-
-    // Auto-register creator as board member
-    await this.boardMembersService.addCreator(board.id, data.createdBy).catch(() => {
-      // Silent — board created but member registration failed; admin can manually add
+      return board;
     });
-    this.eventEmitter.emitAsync(EVENTS.BOARD_CREATED, {
-      boardId: board.id,
-      boardTitle: board.title,
-      createdBy: data.createdBy,
-      teamMemberIds: [data.createdBy],
-    }).catch((err: Error) => {
-      // Per rules/error-handle-async-errors.md — never let fire-and-forget crash
-    });
-
-    return board;
   }
 
   async findAll(filters?: { status?: string; search?: string; page?: number; limit?: number }) {

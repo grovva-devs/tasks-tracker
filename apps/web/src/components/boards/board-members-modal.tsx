@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth";
@@ -25,13 +24,20 @@ interface Member {
   userAvatarUrl?: string | null;
 }
 
+interface SystemUser {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string | null;
+}
+
 interface BoardMembersModalProps {
   boardId: string;
 }
 
 export function BoardMembersModal({ boardId }: BoardMembersModalProps) {
   const [open, setOpen] = useState(false);
-  const [newUserEmail, setNewUserEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
   const token = useAuthStore((s) => s.token);
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
@@ -42,10 +48,19 @@ export function BoardMembersModal({ boardId }: BoardMembersModalProps) {
     enabled: !!boardId && open,
   });
 
+  const { data: systemUsers = [] } = useQuery({
+    queryKey: ["system-users"],
+    queryFn: () => apiClient<SystemUser[]>("/users", { token: token! }),
+    enabled: open,
+  });
+
   const addMember = useMutation({
     mutationFn: (userId: string) =>
       apiClient(`/boards/${boardId}/members`, { method: "POST", token: token!, body: { userId } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["board-members", boardId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board-members", boardId] });
+      setSelectedUserId("");
+    },
   });
 
   const removeMember = useMutation({
@@ -53,6 +68,10 @@ export function BoardMembersModal({ boardId }: BoardMembersModalProps) {
       apiClient(`/boards/${boardId}/members/${userId}`, { method: "DELETE", token: token! }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["board-members", boardId] }),
   });
+
+  // Filter out users already in the board
+  const existingMemberIds = new Set(members.map((m) => m.userId));
+  const availableUsers = systemUsers.filter((u) => !existingMemberIds.has(u.id));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -64,21 +83,28 @@ export function BoardMembersModal({ boardId }: BoardMembersModalProps) {
 
         <div className="space-y-4">
           <div className="flex gap-2">
-            <Input
-              placeholder="User ID to add..."
-              value={newUserEmail}
-              onChange={(e) => setNewUserEmail(e.target.value)}
-            />
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="flex-1 h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            >
+              <option value="">Select a user...</option>
+              {availableUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.displayName} ({user.email})
+                </option>
+              ))}
+            </select>
             <Button
               size="sm"
-              onClick={() => { if (newUserEmail.trim()) { addMember.mutate(newUserEmail.trim()); setNewUserEmail(""); } }}
-              disabled={!newUserEmail.trim() || addMember.isPending}
+              onClick={() => { if (selectedUserId) { addMember.mutate(selectedUserId); } }}
+              disabled={!selectedUserId || addMember.isPending}
             >
               <UserPlus className="h-3.5 w-3.5" />
             </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
             {members.map((member) => (
               <div key={member.userId} className="flex items-center justify-between rounded-md border p-2">
                 <div className="flex items-center gap-2">

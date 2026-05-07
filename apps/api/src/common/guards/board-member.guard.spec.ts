@@ -29,50 +29,38 @@ describe("BoardMemberGuard", () => {
     } as any;
   }
 
-  function setupDbResult(boardResult: any[], memberResult: any[] = []) {
-    // First call: boards query
-    const boardLimitFn = vi.fn().mockResolvedValue(boardResult);
-    const boardWhereFn = vi.fn().mockReturnValue({ limit: boardLimitFn });
-    const boardFromFn = vi.fn().mockReturnValue({ where: boardWhereFn });
-
-    // Second call: board_members query
-    const memberLimitFn = vi.fn().mockResolvedValue(memberResult);
-    const memberWhereFn = vi.fn().mockReturnValue({ limit: memberLimitFn });
-    const memberFromFn = vi.fn().mockReturnValue({ where: memberWhereFn });
-
-    let callCount = 0;
-    (db.select as any).mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return { from: boardFromFn };
-      return { from: memberFromFn };
-    });
-
-    return { boardLimitFn, boardWhereFn, boardFromFn, memberLimitFn, memberWhereFn, memberFromFn };
+  /** Setup mock for the unified single-query guard */
+  function setupDbResult(result: any[]) {
+    const limitFn = vi.fn().mockResolvedValue(result);
+    const whereFn = vi.fn().mockReturnValue({ limit: limitFn });
+    const fromFn = vi.fn().mockReturnValue({ where: whereFn });
+    (db.select as any).mockReturnValue({ from: fromFn });
+    return { limitFn, whereFn, fromFn };
   }
 
   it("allows access if user is the board creator", async () => {
-    setupDbResult([{ id: "b1", createdBy: "u1" }]);
+    setupDbResult([{ id: "b1", createdBy: "u1", hasAccess: true }]);
     const ctx = makeContext({ id: "u1", role: "member" }, { id: "b1" });
     const result = await guard.canActivate(ctx);
     expect(result).toBe(true);
   });
 
   it("allows access if user is admin even when not creator", async () => {
-    setupDbResult([{ id: "b1", createdBy: "u-other" }]);
+    setupDbResult([{ id: "b1", createdBy: "u-other", hasAccess: true }]);
     const ctx = makeContext({ id: "u1", role: "admin" }, { id: "b1" });
     const result = await guard.canActivate(ctx);
     expect(result).toBe(true);
   });
 
   it("allows access if user is a board member (not creator)", async () => {
-    setupDbResult([{ id: "b1", createdBy: "u-other" }], [{ boardId: "b1", userId: "u1" }]);
+    setupDbResult([{ id: "b1", createdBy: "u-other", hasAccess: true }]);
     const ctx = makeContext({ id: "u1", role: "member" }, { id: "b1" });
     const result = await guard.canActivate(ctx);
     expect(result).toBe(true);
   });
 
   it("denies access if user is not creator, not admin, and not board member", async () => {
-    setupDbResult([{ id: "b1", createdBy: "u-other" }], []);
+    setupDbResult([{ id: "b1", createdBy: "u-other", hasAccess: false }]);
     const ctx = makeContext({ id: "u1", role: "member" }, { id: "b1" });
     await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
   });
@@ -90,7 +78,7 @@ describe("BoardMemberGuard", () => {
   });
 
   it("allows access when boardId param is present (uses boardId)", async () => {
-    setupDbResult([{ id: "b1", createdBy: "u1" }]);
+    setupDbResult([{ id: "b1", createdBy: "u1", hasAccess: true }]);
     const ctx = makeContext({ id: "u1", role: "member" }, { boardId: "b1" });
     const result = await guard.canActivate(ctx);
     expect(result).toBe(true);

@@ -15,6 +15,13 @@
       "when": 1778116705352,
       "tag": "0001_board_members",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778121097341,
+      "tag": "0002_board_members_user_idx",
+      "breakpoints": true
     }
   ]
 }

@@ -8,9 +8,13 @@ import {
   Body,
   Query,
   UseGuards,
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { BoardsService } from "./boards.service";
 import { BoardMembersService } from "./board-members.service";
+import { UsersService } from "../users/users.service";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
@@ -23,6 +27,7 @@ export class BoardsController {
   constructor(
     private boardsService: BoardsService,
     private boardMembersService: BoardMembersService,
+    private usersService: UsersService,
   ) {}
 
   @Get()
@@ -101,18 +106,41 @@ export class BoardsController {
   @Post(":id/members")
   async addMember(
     @Param("id") id: string,
-    @Body() body: { userId: string },
+    @Body() body: { userId?: string; email?: string },
+    @CurrentUser() user: any,
   ) {
-    return this.boardMembersService.add(id, body.userId);
+    // Only admin or board creator can add members
+    const board = await this.boardsService.findOne(id);
+    if (user.role !== "admin" && board.createdBy !== user.id) {
+      throw new ForbiddenException("Only admin or board creator can add members");
+    }
+
+    let userId = body.userId;
+    // If email provided, resolve to userId
+    if (!userId && body.email) {
+      const targetUser = await this.usersService.findByEmail(body.email);
+      if (!targetUser) throw new NotFoundException("User not found");
+      userId = targetUser.id;
+    }
+    if (!userId) throw new BadRequestException("userId or email required");
+
+    return this.boardMembersService.add(id, userId);
   }
 
   @UseGuards(BoardMemberGuard)
-  @Delete(":id/members/:userId")
+  @Delete(":id/members/:memberUserId")
   async removeMember(
     @Param("id") id: string,
-    @Param("userId") userId: string,
+    @Param("memberUserId") memberUserId: string,
+    @CurrentUser() user: any,
   ) {
-    await this.boardMembersService.remove(id, userId);
+    // Only admin or board creator can remove members
+    const board = await this.boardsService.findOne(id);
+    if (user.role !== "admin" && board.createdBy !== user.id) {
+      throw new ForbiddenException("Only admin or board creator can remove members");
+    }
+
+    await this.boardMembersService.remove(id, memberUserId);
     return { success: true };
   }
 

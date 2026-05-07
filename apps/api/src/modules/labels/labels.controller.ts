@@ -22,10 +22,11 @@ export class LabelsController {
 
   @Patch(":id")
   async update(
+    @Param("boardId") boardId: string,
     @Param("id") id: string,
     @Body() body: { name?: string; color?: string },
   ) {
-    return this.labelsService.update(id, body);
+    return this.labelsService.update(id, boardId, body);
   }
 
   @Delete(":id")

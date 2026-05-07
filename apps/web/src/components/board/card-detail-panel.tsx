@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -34,7 +34,7 @@ interface CardDetailPanelProps {
   onClose: () => void;
   readOnly: boolean;
   publicView?: boolean;
-  boardMembers?: { userId: string; userDisplayName: string; userEmail: string; userAvatarUrl?: string | null }[];
+  boardMembers?: { userId: string; displayName: string; email: string; avatarUrl?: string | null }[];
   boardLabels?: { id: string; name: string; color: string }[];
   onAddComment?: (cardId: string, content: string, visibility: string) => void;
   onDeleteAttachment?: (id: string) => void;
@@ -43,6 +43,19 @@ interface CardDetailPanelProps {
   onRemoveAssignee?: (cardId: string, userId: string) => void;
   onAddLabel?: (cardId: string, labelId: string) => void;
   onRemoveLabel?: (cardId: string, labelId: string) => void;
+}
+
+/** Hook to close dropdown when clicking outside */
+function useClickOutside(ref: React.RefObject<HTMLElement | null>, onOutside: () => void) {
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        onOutside();
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [ref, onOutside]);
 }
 
 export function CardDetailPanel({
@@ -55,6 +68,12 @@ export function CardDetailPanel({
   const [commentVisibility, setCommentVisibility] = useState("internal");
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
+
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const labelDropdownRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(assigneeDropdownRef, () => setShowAssigneeDropdown(false));
+  useClickOutside(labelDropdownRef, () => setShowLabelDropdown(false));
 
   if (!card) return null;
 
@@ -70,7 +89,6 @@ export function CardDetailPanel({
   const visibleComments = publicView ? card.comments.filter((c: any) => c.visibility === "client") : card.comments;
   const visibleAttachments = publicView ? card.attachments.filter((a: any) => a.visibility === "client") : card.attachments;
 
-  // Filter out already assigned members / labels
   const assignedUserIds = new Set(card.assignees.map((a) => a.userId));
   const availableMembers = boardMembers.filter((m) => !assignedUserIds.has(m.userId));
 
@@ -91,20 +109,33 @@ export function CardDetailPanel({
           {/* Labels */}
           <div className="flex flex-wrap items-center gap-1">
             {card.labels.map((label) => (
-              <Badge
-                key={label.id}
-                variant="outline"
-                className="cursor-pointer"
-                style={{ borderColor: label.color, color: label.color }}
-                onClick={() => !readOnly && onRemoveLabel?.(card.id, label.id)}
-              >
-                {label.name}
-                {!readOnly && <X className="ml-1 h-2.5 w-2.5 inline" />}
-              </Badge>
+              <div key={label.id} className="flex items-center gap-0.5">
+                <Badge
+                  variant="outline"
+                  style={{ borderColor: label.color, color: label.color }}
+                >
+                  {label.name}
+                </Badge>
+                {!readOnly && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4"
+                    onClick={() => onRemoveLabel?.(card.id, label.id)}
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </Button>
+                )}
+              </div>
             ))}
             {!readOnly && availableLabels.length > 0 && (
-              <div className="relative">
-                <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => setShowLabelDropdown(!showLabelDropdown)}>
+              <div className="relative" ref={labelDropdownRef}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2"
+                  onClick={() => setShowLabelDropdown(!showLabelDropdown)}
+                >
                   <Tag className="h-3 w-3 mr-1" /> Add
                 </Button>
                 {showLabelDropdown && (
@@ -127,7 +158,7 @@ export function CardDetailPanel({
 
           {/* Assignees */}
           {!publicView && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-muted-foreground">Assignees:</span>
               {card.assignees.map((assignee) => (
                 <div key={assignee.userId} className="flex items-center gap-1">
@@ -136,15 +167,25 @@ export function CardDetailPanel({
                   </Avatar>
                   <span className="text-sm">{assignee.displayName}</span>
                   {!readOnly && (
-                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => onRemoveAssignee?.(card.id, assignee.userId)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => onRemoveAssignee?.(card.id, assignee.userId)}
+                    >
                       <X className="h-2.5 w-2.5" />
                     </Button>
                   )}
                 </div>
               ))}
               {!readOnly && availableMembers.length > 0 && (
-                <div className="relative">
-                  <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}>
+                <div className="relative" ref={assigneeDropdownRef}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2"
+                    onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}
+                  >
                     <UserPlus className="h-3 w-3 mr-1" /> Assign
                   </Button>
                   {showAssigneeDropdown && (
@@ -156,9 +197,9 @@ export function CardDetailPanel({
                           onClick={() => { onAddAssignee?.(card.id, member.userId); setShowAssigneeDropdown(false); }}
                         >
                           <Avatar className="h-5 w-5">
-                            <AvatarFallback>{member.userDisplayName.charAt(0)}</AvatarFallback>
+                            <AvatarFallback>{member.displayName.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          {member.userDisplayName} ({member.userEmail})
+                          {member.displayName} ({member.email})
                         </button>
                       ))}
                     </div>

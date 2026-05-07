@@ -82,63 +82,65 @@ export class CardsService {
   }
 
   async findDetail(id: string) {
-    const [card] = await db
-      .select({
-        id: cards.id, listId: cards.listId, boardId: cards.boardId,
-        publicId: cards.publicId, cardNumber: cards.cardNumber,
-        title: cards.title, description: cards.description, position: cards.position,
-        dueDate: cards.dueDate, completedAt: cards.completedAt,
-        deletedAt: cards.deletedAt, createdBy: cards.createdBy,
-        createdAt: cards.createdAt, updatedAt: cards.updatedAt,
-      })
-      .from(cards)
-      .where(eq(cards.id, id))
-      .limit(1);
-    if (!card) throw new NotFoundException("Card not found");
+    return db.transaction(async (tx) => {
+      const [card] = await tx
+        .select({
+          id: cards.id, listId: cards.listId, boardId: cards.boardId,
+          publicId: cards.publicId, cardNumber: cards.cardNumber,
+          title: cards.title, description: cards.description, position: cards.position,
+          dueDate: cards.dueDate, completedAt: cards.completedAt,
+          deletedAt: cards.deletedAt, createdBy: cards.createdBy,
+          createdAt: cards.createdAt, updatedAt: cards.updatedAt,
+        })
+        .from(cards)
+        .where(eq(cards.id, id))
+        .limit(1);
+      if (!card) throw new NotFoundException("Card not found");
 
-    const comments = await db
-      .select({
-        id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
-        content: cardComments.content, visibility: cardComments.visibility,
-        createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
-      })
-      .from(cardComments)
-      .where(eq(cardComments.cardId, id))
-      .orderBy(cardComments.createdAt);
+      const comments = await tx
+        .select({
+          id: cardComments.id, cardId: cardComments.cardId, authorId: cardComments.authorId,
+          content: cardComments.content, visibility: cardComments.visibility,
+          createdAt: cardComments.createdAt, updatedAt: cardComments.updatedAt,
+        })
+        .from(cardComments)
+        .where(eq(cardComments.cardId, id))
+        .orderBy(cardComments.createdAt);
 
-    const attachments = await db
-      .select({
-        id: cardAttachments.id, cardId: cardAttachments.cardId,
-        fileName: cardAttachments.fileName, fileUrl: cardAttachments.fileUrl,
-        fileSize: cardAttachments.fileSize, mimeType: cardAttachments.mimeType,
-        visibility: cardAttachments.visibility, createdAt: cardAttachments.createdAt,
-      })
-      .from(cardAttachments)
-      .where(eq(cardAttachments.cardId, id))
-      .orderBy(cardAttachments.createdAt);
+      const attachments = await tx
+        .select({
+          id: cardAttachments.id, cardId: cardAttachments.cardId,
+          fileName: cardAttachments.fileName, fileUrl: cardAttachments.fileUrl,
+          fileSize: cardAttachments.fileSize, mimeType: cardAttachments.mimeType,
+          visibility: cardAttachments.visibility, createdAt: cardAttachments.createdAt,
+        })
+        .from(cardAttachments)
+        .where(eq(cardAttachments.cardId, id))
+        .orderBy(cardAttachments.createdAt);
 
-    const assignees = await db
-      .select({
-        userId: cardAssignees.userId,
-        displayName: users.displayName,
-        email: users.email,
-        avatarUrl: users.avatarUrl,
-      })
-      .from(cardAssignees)
-      .innerJoin(users, eq(cardAssignees.userId, users.id))
-      .where(eq(cardAssignees.cardId, id));
+      const assignees = await tx
+        .select({
+          userId: cardAssignees.userId,
+          displayName: users.displayName,
+          email: users.email,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(cardAssignees)
+        .innerJoin(users, eq(cardAssignees.userId, users.id))
+        .where(eq(cardAssignees.cardId, id));
 
-    const labelList = await db
-      .select({
-        id: labelsTable.id,
-        name: labelsTable.name,
-        color: labelsTable.color,
-      })
-      .from(cardLabels)
-      .innerJoin(labelsTable, eq(cardLabels.labelId, labelsTable.id))
-      .where(eq(cardLabels.cardId, id));
+      const labelList = await tx
+        .select({
+          id: labelsTable.id,
+          name: labelsTable.name,
+          color: labelsTable.color,
+        })
+        .from(cardLabels)
+        .innerJoin(labelsTable, eq(cardLabels.labelId, labelsTable.id))
+        .where(eq(cardLabels.cardId, id));
 
-    return { ...card, comments, attachments, assignees, labels: labelList };
+      return { ...card, comments, attachments, assignees, labels: labelList };
+    });
   }
 
   async update(id: string, data: { title?: string; description?: string; dueDate?: string | null }) {

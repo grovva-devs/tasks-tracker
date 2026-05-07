@@ -143,7 +143,12 @@ export default function BoardDetailPage() {
         isOpen={panelOpen}
         onClose={() => { setPanelOpen(false); setSelectedCard(null); }}
         readOnly={false}
-        boardMembers={boardMembers}
+        boardMembers={boardMembers.map((m) => ({
+          userId: m.userId,
+          displayName: m.userDisplayName,
+          email: m.userEmail,
+          avatarUrl: m.userAvatarUrl,
+        }))}
         boardLabels={boardLabels}
         onAddComment={(cardId, content, visibility) => mutations.addComment.mutate({ cardId, content, visibility })}
         onAddAssignee={(cardId, userId) => mutations.addAssignee.mutate({ cardId, userId })}

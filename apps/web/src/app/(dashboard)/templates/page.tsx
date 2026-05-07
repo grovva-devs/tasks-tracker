@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CategoryManager } from "@/components/template/category-manager";
 import Link from "next/link";
 import { Plus, BookTemplate } from "lucide-react";
 
@@ -20,10 +22,14 @@ interface Template {
 export default function TemplatesPage() {
   const token = useAuthStore((s) => s.token);
   const queryClient = useQueryClient();
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
 
   const { data: templates = [] } = useQuery({
-    queryKey: ["templates"],
-    queryFn: () => apiClient<Template[]>("/templates", { token: token! }),
+    queryKey: ["templates", selectedCategory],
+    queryFn: () => apiClient<Template[]>("/templates", {
+      token: token!,
+      ...(selectedCategory ? { params: { categoryId: selectedCategory } } : {}),
+    }),
   });
 
   const duplicate = useMutation({
@@ -47,6 +53,8 @@ export default function TemplatesPage() {
           <Button><Plus className="mr-2 h-4 w-4" /> New Template</Button>
         </Link>
       </div>
+
+      <CategoryManager selectedId={selectedCategory} onSelect={setSelectedCategory} />
 
       {templates.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">

@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { BoardsService } from "./boards.service";
+import { BoardMembersService } from "./board-members.service";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
@@ -19,7 +20,10 @@ import { CreateBoardDto, UpdateBoardDto } from "../../common/dto/boards.dto";
 
 @Controller("boards")
 export class BoardsController {
-  constructor(private boardsService: BoardsService) {}
+  constructor(
+    private boardsService: BoardsService,
+    private boardMembersService: BoardMembersService,
+  ) {}
 
   @Get()
   async findAll(
@@ -85,6 +89,31 @@ export class BoardsController {
   @Get(":id/stats")
   async getStats(@Param("id") id: string) {
     return this.boardsService.getStats(id);
+  }
+
+  @UseGuards(BoardMemberGuard)
+  @Get(":id/members")
+  async getMembers(@Param("id") id: string) {
+    return this.boardMembersService.findByBoard(id);
+  }
+
+  @UseGuards(BoardMemberGuard)
+  @Post(":id/members")
+  async addMember(
+    @Param("id") id: string,
+    @Body() body: { userId: string },
+  ) {
+    return this.boardMembersService.add(id, body.userId);
+  }
+
+  @UseGuards(BoardMemberGuard)
+  @Delete(":id/members/:userId")
+  async removeMember(
+    @Param("id") id: string,
+    @Param("userId") userId: string,
+  ) {
+    await this.boardMembersService.remove(id, userId);
+    return { success: true };
   }
 
   // PUBLIC ENDPOINTS — no JWT required

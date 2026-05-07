@@ -5,10 +5,14 @@ import { db } from "../../database/connection";
 import { boards, lists, cards, cardComments, cardAttachments } from "../../database/schema";
 import { generateSlug, EVENTS } from "@onboarding-tracker/shared";
 import * as crypto from "crypto";
+import { BoardMembersService } from "./board-members.service";
 
 @Injectable()
 export class BoardsService {
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(
+    private eventEmitter: EventEmitter2,
+    private boardMembersService: BoardMembersService,
+  ) {}
   async create(data: {
     title: string;
     clientName: string;
@@ -37,7 +41,10 @@ export class BoardsService {
 
     if (!board) throw new NotFoundException("Failed to create board");
 
-    // Emit board.created event (fire-and-forget with .catch())
+    // Auto-register creator as board member
+    await this.boardMembersService.addCreator(board.id, data.createdBy).catch(() => {
+      // Silent — board created but member registration failed; admin can manually add
+    });
     this.eventEmitter.emitAsync(EVENTS.BOARD_CREATED, {
       boardId: board.id,
       boardTitle: board.title,

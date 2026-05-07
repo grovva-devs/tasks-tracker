@@ -18,3 +18,4 @@ export { webhooks } from "./webhooks";
 export { notifications } from "./notifications";
 export { settings } from "./settings";
 export { boardActivities, boardActivitiesRelations } from "./board-activities";
+export { boardMembers, boardMembersRelations } from "./board-members";

@@ -6,12 +6,13 @@ import { useBoardData } from "@/hooks/use-board-data";
 import { useBoardMutations } from "@/hooks/use-board-mutations";
 import { KanbanBoard } from "@/components/board/kanban-board";
 import { CardDetailPanel } from "@/components/board/card-detail-panel";
+import { BoardMembersModal } from "@/components/boards/board-members-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, MoreVertical, Share2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Share2, Users } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { apiClient } from "@/lib/api-client";
@@ -74,6 +75,7 @@ export default function BoardDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <BoardMembersModal boardId={boardId} />
           <Button variant="outline" size="sm" onClick={handleCopyPublicLink}>
             <Share2 className="mr-2 h-3.5 w-3.5" />
             Copy Public Link

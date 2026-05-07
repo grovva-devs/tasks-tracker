@@ -10,6 +10,7 @@ import {
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { lists } from "./lists";
+import { boardMembers } from "./board-members";
 
 export const boards = pgTable(
   "boards",
@@ -50,4 +51,5 @@ export const boardsRelations = relations(boards, ({ one, many }) => ({
     relationName: "boardCreator",
   }),
   lists: many(lists),
+  members: many(boardMembers),
 }));

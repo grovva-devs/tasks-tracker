@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Post, Body, UploadedFile, UseInterceptors, BadR
 import { FileInterceptor } from "@nestjs/platform-express";
 import { SettingsService } from "./settings.service";
 import { S3UploadService } from "../attachments/s3-upload.service";
+import { EmailSender } from "../notifications/email.sender";
 import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { UpdateSettingsDto } from "../../common/dto/settings.dto";
@@ -11,6 +12,7 @@ export class SettingsController {
   constructor(
     private settingsService: SettingsService,
     private s3UploadService: S3UploadService,
+    private emailSender: EmailSender,
   ) {}
 
   @Public()
@@ -50,5 +52,17 @@ export class SettingsController {
     await this.settingsService.update({ logoUrl: result.fileUrl });
 
     return { logoUrl: result.fileUrl };
+  }
+
+  @Roles("admin")
+  @Post("test-email")
+  async testEmail() {
+    const settings = await this.settingsService.getFull();
+    const success = await this.emailSender.sendBoardCreatedEmail(
+      settings.smtpUser || "test@example.com",
+      "Test User",
+      "Test Board",
+    );
+    return { success };
   }
 }

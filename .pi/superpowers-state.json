@@ -30,9 +30,10 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/web/src/providers/theme-provider.tsx",
-      "apps/web/src/app/layout.tsx",
-      "apps/web/src/components/layout/header.tsx"
+      "apps/web/src/components/settings/email-tab.tsx",
+      "apps/web/src/app/(dashboard)/settings/page.tsx",
+      "apps/api/src/modules/settings/settings.controller.ts",
+      "apps/api/src/modules/settings/settings.module.ts"
     ],
     "redVerificationPending": false
   },

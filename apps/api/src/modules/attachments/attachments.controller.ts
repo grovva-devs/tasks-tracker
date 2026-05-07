@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Delete, Param, Body } from "@nestjs/common";
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, ForbiddenException } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { BoardMemberGuard } from "../../common/guards/board-member.guard";
 import { AttachmentsService } from "./attachments.service";
 
 @Controller("cards/:cardId/attachments")
+@UseGuards(BoardMemberGuard)
 export class AttachmentsController {
   constructor(private attachmentsService: AttachmentsService) {}
 
@@ -25,8 +27,8 @@ export class AttachmentsController {
   }
 
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    await this.attachmentsService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.attachmentsService.remove(id, user.id, user.role);
     return { success: true };
   }
 }

@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, ForbiddenException } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { BoardMemberGuard } from "../../common/guards/board-member.guard";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto, UpdateCommentDto } from "../../common/dto/comments.dto";
 
 @Controller("cards/:cardId/comments")
+@UseGuards(BoardMemberGuard)
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
 
@@ -32,8 +33,8 @@ export class CommentsController {
   }
 
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    await this.commentsService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.commentsService.remove(id, user.id, user.role);
     return { success: true };
   }
 }

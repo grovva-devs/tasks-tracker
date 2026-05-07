@@ -40,6 +40,10 @@ interface CardDetailPanelProps {
   boardLabels?: { id: string; name: string; color: string }[];
   onAddComment?: (cardId: string, content: string, visibility: string) => void;
   onDeleteAttachment?: (id: string) => void;
+  onUpdateComment?: (id: string, content: string) => void;
+  onDeleteComment?: (id: string) => void;
+  currentUserId?: string;
+  currentUserRole?: string;
   onUpdateCard?: (id: string, data: any) => void;
   onAddAssignee?: (cardId: string, userId: string) => void;
   onRemoveAssignee?: (cardId: string, userId: string) => void;
@@ -50,7 +54,9 @@ interface CardDetailPanelProps {
 export function CardDetailPanel({
   card, isOpen, onClose, readOnly, publicView,
   boardMembers = [], boardLabels = [],
-  onAddComment, onDeleteAttachment, onUpdateCard,
+  onAddComment, onDeleteAttachment, onUpdateComment, onDeleteComment,
+  currentUserId, currentUserRole,
+  onUpdateCard,
   onAddAssignee, onRemoveAssignee, onAddLabel, onRemoveLabel,
 }: CardDetailPanelProps) {
   const [commentText, setCommentText] = useState("");
@@ -308,7 +314,14 @@ export function CardDetailPanel({
             </TabsList>
 
             <TabsContent value="comments" className="mt-4 space-y-4">
-              <CommentList comments={card.comments} publicView={publicView} />
+              <CommentList
+                comments={card.comments}
+                publicView={publicView}
+                currentUserId={currentUserId}
+                currentUserRole={currentUserRole}
+                onUpdateComment={onUpdateComment}
+                onDeleteComment={onDeleteComment}
+              />
 
               {!readOnly && !publicView && (
                 <div className="space-y-2 border-t pt-4">

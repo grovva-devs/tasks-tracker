@@ -1,24 +1,35 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatDate } from "@/lib/utils";
+import { CommentItem } from "./comment-item";
 
 interface Comment {
   id: string;
+  authorId: string;
   authorName: string;
   authorAvatarUrl?: string | null;
   content: string;
   visibility: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface CommentListProps {
   comments: Comment[];
+  currentUserId?: string;
+  currentUserRole?: string;
   publicView?: boolean;
+  onUpdateComment?: (id: string, content: string) => void;
+  onDeleteComment?: (id: string) => void;
 }
 
-export function CommentList({ comments, publicView }: CommentListProps) {
+export function CommentList({
+  comments,
+  currentUserId,
+  currentUserRole,
+  publicView,
+  onUpdateComment,
+  onDeleteComment,
+}: CommentListProps) {
   const filtered = publicView
     ? comments.filter((c) => c.visibility === "client")
     : comments;
@@ -30,23 +41,15 @@ export function CommentList({ comments, publicView }: CommentListProps) {
   return (
     <div className="space-y-3">
       {filtered.map((comment) => (
-        <div key={comment.id} className="flex gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{comment.authorName}</span>
-              {!publicView && (
-                <Badge variant="outline" className="text-[10px] px-1.5">
-                  {comment.visibility}
-                </Badge>
-              )}
-              <span className="text-xs text-muted-foreground">{formatDate(comment.createdAt)}</span>
-            </div>
-            <p className="mt-1 text-sm">{comment.content}</p>
-          </div>
-        </div>
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          currentUserId={currentUserId}
+          currentUserRole={currentUserRole}
+          publicView={publicView}
+          onUpdate={onUpdateComment}
+          onDelete={onDeleteComment}
+        />
       ))}
     </div>
   );

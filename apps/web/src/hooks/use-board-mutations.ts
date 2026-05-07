@@ -59,6 +59,24 @@ export function useBoardMutations(boardId: string) {
     onSuccess: invalidateBoard,
   });
 
+  const updateComment = useMutation({
+    mutationFn: ({ cardId, id, content }: { cardId: string; id: string; content: string }) =>
+      apiClient(`/cards/${cardId}/comments/${id}`, { method: "PATCH", token: token!, body: { content } }),
+    onSuccess: invalidateBoard,
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: ({ cardId, id }: { cardId: string; id: string }) =>
+      apiClient(`/cards/${cardId}/comments/${id}`, { method: "DELETE", token: token! }),
+    onSuccess: invalidateBoard,
+  });
+
+  const deleteAttachment = useMutation({
+    mutationFn: ({ cardId, id }: { cardId: string; id: string }) =>
+      apiClient(`/cards/${cardId}/attachments/${id}`, { method: "DELETE", token: token! }),
+    onSuccess: invalidateBoard,
+  });
+
   const addAssignee = useMutation({
     mutationFn: ({ cardId, userId }: { cardId: string; userId: string }) =>
       apiClient(`/cards/${cardId}/assignees`, { method: "POST", token: token!, body: { userId } }),
@@ -128,7 +146,8 @@ export function useBoardMutations(boardId: string) {
   return {
     addList, updateList, deleteList,
     addCard, updateCard, moveCard, deleteCard,
-    addComment,
+    addComment, updateComment, deleteComment,
+    deleteAttachment,
     addAssignee, removeAssignee,
     createLabel, updateLabel, deleteLabel,
     addLabel, removeLabel,

@@ -51,6 +51,7 @@ export default function BoardDetailPage() {
   const params = useParams();
   const boardId = params.id as string;
   const token = useAuthStore((s) => s.token);
+  const currentUser = useAuthStore((s) => s.user);
 
   const { data: board, isLoading } = useBoardData(boardId, token);
   const mutations = useBoardMutations(boardId);
@@ -161,6 +162,11 @@ export default function BoardDetailPage() {
         }))}
         boardLabels={boardLabels}
         onAddComment={(cardId, content, visibility) => mutations.addComment.mutate({ cardId, content, visibility })}
+        onUpdateComment={(id, content) => selectedCard && mutations.updateComment.mutate({ cardId: selectedCard.id, id, content })}
+        onDeleteComment={(id) => selectedCard && mutations.deleteComment.mutate({ cardId: selectedCard.id, id })}
+        onDeleteAttachment={(id) => selectedCard && mutations.deleteAttachment.mutate({ cardId: selectedCard.id, id })}
+        currentUserId={currentUser?.id}
+        currentUserRole={currentUser?.role}
         onUpdateCard={handleUpdateCard}
         onAddAssignee={(cardId, userId) => mutations.addAssignee.mutate({ cardId, userId })}
         onRemoveAssignee={(cardId, userId) => mutations.removeAssignee.mutate({ cardId, userId })}

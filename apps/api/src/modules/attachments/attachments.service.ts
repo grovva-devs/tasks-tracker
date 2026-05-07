@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { db } from "../../database/connection";
 import { cardAttachments } from "../../database/schema";
 import { eq } from "drizzle-orm";
@@ -31,7 +31,16 @@ export class AttachmentsService {
       .orderBy(cardAttachments.createdAt);
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string, userRole: string) {
+    const [attachment] = await db
+      .select({ id: cardAttachments.id, uploadedBy: cardAttachments.uploadedBy })
+      .from(cardAttachments)
+      .where(eq(cardAttachments.id, id))
+      .limit(1);
+    if (!attachment) throw new NotFoundException("Attachment not found");
+    if (attachment.uploadedBy !== userId && userRole !== "admin") {
+      throw new ForbiddenException("Only uploader or admin can delete");
+    }
     await db.delete(cardAttachments).where(eq(cardAttachments.id, id));
   }
 }

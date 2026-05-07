@@ -74,7 +74,18 @@ export class CommentsService {
     return updated;
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string, userRole: string) {
+    const [comment] = await db
+      .select({
+        id: cardComments.id, authorId: cardComments.authorId,
+      })
+      .from(cardComments)
+      .where(eq(cardComments.id, id))
+      .limit(1);
+    if (!comment) throw new NotFoundException("Comment not found");
+    if (comment.authorId !== userId && userRole !== "admin") {
+      throw new ForbiddenException("Only author or admin can delete");
+    }
     await db.delete(cardComments).where(eq(cardComments.id, id));
   }
 }

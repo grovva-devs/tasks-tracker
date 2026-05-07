@@ -12,6 +12,10 @@ export const settings = pgTable("settings", {
   logoUrl: text("logo_url"),
   primaryColor: varchar("primary_color", { length: 7 }).notNull().default("#3B82F6"),
   emailFrom: varchar("email_from", { length: 255 }),
+  smtpHost: varchar("smtp_host", { length: 255 }),
+  smtpPort: integer("smtp_port"),
+  smtpUser: varchar("smtp_user", { length: 255 }),
+  smtpPassword: text("smtp_password"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

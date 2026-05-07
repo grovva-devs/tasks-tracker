@@ -30,10 +30,8 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/notifications/email.templates/board-created.tsx",
-      "apps/api/src/modules/notifications/email.templates/board-completed.tsx",
-      "apps/api/src/modules/notifications/email.templates/card-completed.tsx",
-      "apps/api/src/modules/notifications/email.sender.ts"
+      "apps/api/src/database/schema/settings.ts",
+      "apps/api/src/modules/settings/settings.service.ts"
     ],
     "redVerificationPending": false
   },

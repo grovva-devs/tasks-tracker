@@ -2,6 +2,27 @@ import { Injectable } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import { db } from "../../database/connection";
 import { settings } from "../../database/schema";
+import * as crypto from "crypto";
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY ?? "default-key-not-secure";
+const KEY_BUFFER = Buffer.alloc(32);
+KEY_BUFFER.write(ENCRYPTION_KEY, 0, 32, "utf8");
+
+function encrypt(text: string): string {
+  const iv = crypto.randomBytes(16);
+  const cipher = (crypto as any).createCipheriv("aes-256-cbc", KEY_BUFFER, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted;
+}
+
+function decrypt(text: string): string {
+  const [ivHex, encryptedHex] = text.split(":");
+  const decipher = (crypto as any).createDecipheriv("aes-256-cbc", KEY_BUFFER, Buffer.from(ivHex as any, "hex" as any));
+  let decrypted = decipher.update(encryptedHex, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
 
 @Injectable()
 export class SettingsService {
@@ -11,7 +32,6 @@ export class SettingsService {
   private readonly CACHE_TTL_MS = 60_000; // 1 minute
 
   private async getOrCreate() {
-    // Return cached settings if still valid
     const now = Date.now();
     if (this.cachedSettings && now < this.cacheExpiry) {
       return this.cachedSettings;
@@ -24,6 +44,10 @@ export class SettingsService {
         logoUrl: settings.logoUrl,
         primaryColor: settings.primaryColor,
         emailFrom: settings.emailFrom,
+        smtpHost: settings.smtpHost,
+        smtpPort: settings.smtpPort,
+        smtpUser: settings.smtpUser,
+        smtpPassword: settings.smtpPassword,
         createdAt: settings.createdAt,
         updatedAt: settings.updatedAt,
       })
@@ -48,17 +72,23 @@ export class SettingsService {
   }
 
   async getFull() {
-    return this.getOrCreate();
+    const s = await this.getOrCreate();
+    return { ...s, smtpPassword: s.smtpPassword ? decrypt(s.smtpPassword) : undefined };
   }
 
-  async update(data: Partial<typeof settings.$inferInsert>) {
+  async update(data: Partial<typeof settings.$inferInsert> & { smtpPassword?: string }) {
     const s = await this.getOrCreate();
+    const updateData: any = { ...data, updatedAt: new Date() };
+    if (data.smtpPassword) {
+      updateData.smtpPassword = encrypt(data.smtpPassword);
+    } else if (data.smtpPassword === null || data.smtpPassword === "") {
+      updateData.smtpPassword = null;
+    }
     const [updated] = await db
       .update(settings)
-      .set({ ...data, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(settings.id, s.id))
       .returning();
-    // Invalidate cache on update
     this.cachedSettings = null;
     this.cacheExpiry = 0;
     return updated;

@@ -4,6 +4,13 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, FileIcon } from "lucide-react";
+import { toast } from "sonner";
+
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  "image/", "application/pdf", "application/msword",
+  "application/vnd.openxmlformats-officedocument", "text/",
+];
 
 interface AttachmentUploadProps {
   cardId: string;
@@ -19,43 +26,74 @@ export function AttachmentUpload({ cardId, token, onUploaded }: AttachmentUpload
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFile(e.target.files[0]);
-      setProgress(0);
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    // Frontend validation
+    if (selected.size > MAX_SIZE) {
+      toast.error(`File too large (max ${MAX_SIZE / 1024 / 1024}MB)`);
+      return;
     }
+    const isAllowed = ALLOWED_TYPES.some((t) => selected.type.startsWith(t));
+    if (!isAllowed) {
+      toast.error("File type not allowed. Use images, PDF, Office, or text files.");
+      return;
+    }
+
+    setFile(selected);
+    setProgress(0);
   };
 
   const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
-    setProgress(10);
+    setProgress(0);
 
     const formData = new FormData();
     formData.append("file", file);
     formData.append("visibility", visibility);
 
     try {
-      const res = await fetch(`/api/cards/${cardId}/attachments/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `/api/cards/${cardId}/attachments/upload`, true);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          setProgress(pct);
+        }
+      };
+
+      const attachment = await new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch {
+              resolve({});
+            }
+          } else {
+            try {
+              const err = JSON.parse(xhr.responseText);
+              reject(new Error(err.message || "Upload failed"));
+            } catch {
+              reject(new Error("Upload failed"));
+            }
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.send(formData);
       });
 
-      setProgress(80);
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Upload failed");
-      }
-
-      const attachment = await res.json();
-      setProgress(100);
+      toast.success("Attachment uploaded");
       onUploaded(attachment);
       setFile(null);
       setVisibility("internal");
+      setProgress(0);
       if (inputRef.current) inputRef.current.value = "";
     } catch (err: any) {
-      alert(err.message || "Upload failed");
+      toast.error(err.message || "Upload failed");
     } finally {
       setUploading(false);
     }

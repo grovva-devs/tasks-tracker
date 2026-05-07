@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -22,7 +22,7 @@ export class S3UploadService {
 
   constructor(private configService: ConfigService) {
     this.useLocal = this.configService.get("USE_LOCAL_UPLOAD") === "true" || !this.configService.get("AWS_ACCESS_KEY_ID");
-    this.localDir = this.configService.get("LOCAL_UPLOAD_DIR") || "./uploads";
+    this.localDir = this.configService.get("LOCAL_UPLOAD_DIR") || path.join(process.cwd(), "uploads");
 
     if (!this.useLocal) {
       this.s3Client = new S3Client({
@@ -43,8 +43,14 @@ export class S3UploadService {
   }
 
   async upload(file: UploadedFile, cardId: string): Promise<{ fileUrl: string; fileKey: string }> {
+    // Validate cardId format (UUID v4) to prevent path traversal
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cardId)) {
+      throw new BadRequestException("Invalid card ID format");
+    }
+
     const uuid = crypto.randomUUID();
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    let safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    if (!safeName || safeName === "_") safeName = "unnamed";
     const fileKey = `attachments/${cardId}/${uuid}/${safeName}`;
 
     if (this.useLocal) {
@@ -57,24 +63,28 @@ export class S3UploadService {
       };
     }
 
-    await this.s3Client!.send(
-      new PutObjectCommand({
+    try {
+      await this.s3Client!.send(
+        new PutObjectCommand({
+          Bucket: this.bucket!,
+          Key: fileKey,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          ContentLength: file.size,
+        }),
+      );
+
+      const getCommand = new GetObjectCommand({
         Bucket: this.bucket!,
         Key: fileKey,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        ContentLength: file.size,
-      }),
-    );
+      });
 
-    const getCommand = new GetObjectCommand({
-      Bucket: this.bucket!,
-      Key: fileKey,
-    });
+      const presignedUrl = await getSignedUrl(this.s3Client!, getCommand, { expiresIn: 3600 });
 
-    const presignedUrl = await getSignedUrl(this.s3Client!, getCommand, { expiresIn: 3600 });
-
-    return { fileUrl: presignedUrl, fileKey };
+      return { fileUrl: presignedUrl, fileKey };
+    } catch (err: any) {
+      throw new BadRequestException(`S3 upload failed: ${err.message || "Unknown error"}`);
+    }
   }
 
   isLocal(): boolean {

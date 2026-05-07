@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface BoardMember {
   boardId: string;
@@ -52,6 +52,7 @@ export default function BoardDetailPage() {
   const boardId = params.id as string;
   const token = useAuthStore((s) => s.token);
   const currentUser = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
 
   const { data: board, isLoading } = useBoardData(boardId, token);
   const mutations = useBoardMutations(boardId);
@@ -165,7 +166,7 @@ export default function BoardDetailPage() {
         onUpdateComment={(id, content) => selectedCard && mutations.updateComment.mutate({ cardId: selectedCard.id, id, content })}
         onDeleteComment={(id) => selectedCard && mutations.deleteComment.mutate({ cardId: selectedCard.id, id })}
         onDeleteAttachment={(id) => selectedCard && mutations.deleteAttachment.mutate({ cardId: selectedCard.id, id })}
-        onAddAttachment={() => { /* React Query refetch handles this */ }}
+        onAddAttachment={() => queryClient.invalidateQueries({ queryKey: ["board", boardId] })}
         token={token || undefined}
         currentUserId={currentUser?.id}
         currentUserRole={currentUser?.role}

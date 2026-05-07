@@ -43,13 +43,9 @@ export class AttachmentsController {
     @Body() body: { visibility?: string },
     @CurrentUser() user: any,
   ) {
-    const blockedTypes = [
-      "application/x-msdownload",
-      "application/x-executable",
-      "application/x-dosexec",
-    ];
-    if (blockedTypes.includes(file.mimetype)) {
-      throw new BadRequestException("Executable files not allowed");
+    const allowedTypes = /^(image|application\/pdf|application\/msword|application\/vnd\.openxmlformats|text)\//;
+    if (!allowedTypes.test(file.mimetype)) {
+      throw new BadRequestException("File type not allowed. Use images, PDF, Office, or text files.");
     }
 
     const { fileUrl } = await this.s3UploadService.upload(

@@ -65,7 +65,9 @@ export class BoardsService {
       conditions.push(eq(boards.status, filters.status));
     }
     if (filters?.search) {
-      conditions.push(ilike(boards.clientName, `%${filters.search}%`));
+      conditions.push(
+        sql`(${ilike(boards.clientName, `%${filters.search}%`)} OR ${ilike(boards.title, `%${filters.search}%`)})`
+      );
     }
 
     const page = filters?.page ?? 1;
@@ -263,6 +265,7 @@ export class BoardsService {
             completed: completedAt !== null,
           })),
       })),
+      stats: await this.getStats(board.id),
     };
   }
 

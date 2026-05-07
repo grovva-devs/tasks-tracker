@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { db } from "../../database/connection";
-import { boards, boardActivities } from "../../database/schema";
+import { boards, boardActivities, cards } from "../../database/schema";
 
 @Injectable()
 export class DashboardService {
@@ -25,11 +25,32 @@ export class DashboardService {
     const active = activeResult?.count ?? 0;
     const completed = completedResult?.count ?? 0;
 
+    // Average completion percentage across active boards
+    let avgCompletionPercentage = 0;
+    if (active > 0) {
+      const statsResult = await db.execute(sql`
+        SELECT AVG(
+          CASE WHEN total > 0 THEN ROUND((completed::numeric / total::numeric) * 100) ELSE 0 END
+        )::int as avg_pct
+        FROM (
+          SELECT b.id,
+            COUNT(c.id) FILTER (WHERE c.deleted_at IS NULL) as total,
+            COUNT(c.id) FILTER (WHERE c.completed_at IS NOT NULL AND c.deleted_at IS NULL) as completed
+          FROM boards b
+          LEFT JOIN cards c ON c.board_id = b.id
+          WHERE b.status = 'active' AND b.deleted_at IS NULL
+          GROUP BY b.id
+        ) board_stats
+      `);
+      avgCompletionPercentage = Number((statsResult[0] as any)?.avg_pct ?? 0);
+    }
+
     return {
       totalBoards: total,
       activeBoards: active,
       completedBoards: completed,
       archivedBoards: total - active - completed,
+      avgCompletionPercentage,
       completedBoardPercentage: total > 0 ? Math.round((completed / total) * 100) : 0,
     };
   }

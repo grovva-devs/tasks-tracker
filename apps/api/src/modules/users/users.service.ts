@@ -28,6 +28,7 @@ export class UsersService {
       .select({
         id: users.id,
         email: users.email,
+        passwordHash: users.passwordHash,
         displayName: users.displayName,
         avatarUrl: users.avatarUrl,
         role: users.role,
@@ -80,6 +81,21 @@ export class UsersService {
         id: users.id,
         email: users.email,
         displayName: users.displayName,
+        role: users.role,
+      });
+    return user;
+  }
+
+  async update(id: string, data: { displayName?: string; avatarUrl?: string; passwordHash?: string }) {
+    const [user] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl,
         role: users.role,
       });
     return user;

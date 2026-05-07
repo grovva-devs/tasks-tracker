@@ -30,7 +30,10 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/api/src/modules/notifications/webhook.sender.ts"
+      "apps/api/src/modules/dashboard/dashboard.service.ts",
+      "apps/api/src/modules/boards/boards.service.ts",
+      "apps/api/src/modules/users/users.controller.ts",
+      "apps/api/src/modules/users/users.service.ts"
     ],
     "redVerificationPending": false
   },

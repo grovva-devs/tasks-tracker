@@ -72,7 +72,15 @@ export class BoardsController {
 
   @UseGuards(BoardMemberGuard)
   @Patch(":id")
-  async update(@Param("id") id: string, @Body() body: UpdateBoardDto) {
+  async update(
+    @Param("id") id: string,
+    @Body() body: UpdateBoardDto,
+    @CurrentUser() user: any,
+  ) {
+    const board = await this.boardsService.findOne(id);
+    if (user.role !== "admin" && board.createdBy !== user.id) {
+      throw new ForbiddenException("Only admin or board creator can edit this board");
+    }
     return this.boardsService.update(id, body);
   }
 

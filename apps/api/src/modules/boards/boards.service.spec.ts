@@ -49,10 +49,12 @@ describe("BoardsService", () => {
     return { limitFn, whereFn, fromFn };
   }
 
-  it("archive sets status to archived", async () => {
-    setupUpdateReturning([{ id: "b1", status: "archived" }]);
+  it("archive sets status to archived and records archiver", async () => {
+    const { setFn } = setupUpdateReturning([{ id: "b1", status: "archived", archivedBy: "u1" }]);
     const result = await service.archive("b1", "u1");
     expect(result?.status).toBe("archived");
+    expect(result?.archivedBy).toBe("u1");
+    expect(setFn).toHaveBeenCalled();
   });
 
   it("softDelete sets deletedAt and deletedBy", async () => {
@@ -68,4 +70,15 @@ describe("BoardsService", () => {
     ]);
     await expect(service.findOne("b1")).rejects.toThrow("Board not found");
   });
+
+  it("findDetail throws NotFoundException for soft-deleted board", async () => {
+    setupSelectWithLimit([
+      { id: "b1", title: "Test", deletedAt: new Date(), deletedBy: "u1" },
+    ]);
+    await expect(service.findDetail("b1")).rejects.toThrow("Board not found");
+  });
+
+  // Note: findAll soft-delete filtering is verified by code inspection
+  // (sql`${boards.deletedAt} IS NULL` is the first condition).
+  // Full verification requires integration tests with real data.
 });

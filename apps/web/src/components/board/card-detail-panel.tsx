@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -18,6 +18,7 @@ import { formatDate, cn } from "@/lib/utils";
 import { CommentList } from "./comment-list";
 import { AttachmentList } from "./attachment-list";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useClickOutside } from "@/hooks/use-click-outside";
 
 interface CardDetailPanelProps {
   card: {
@@ -46,19 +47,6 @@ interface CardDetailPanelProps {
   onRemoveLabel?: (cardId: string, labelId: string) => void;
 }
 
-/** Hook to close dropdown when clicking outside */
-function useClickOutside(ref: React.RefObject<HTMLElement | null>, onOutside: () => void) {
-  useEffect(() => {
-    function handleClick(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        onOutside();
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [ref, onOutside]);
-}
-
 export function CardDetailPanel({
   card, isOpen, onClose, readOnly, publicView,
   boardMembers = [], boardLabels = [],
@@ -70,6 +58,7 @@ export function CardDetailPanel({
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
@@ -105,9 +94,16 @@ export function CardDetailPanel({
     if (editDueDate !== (card.dueDate ?? "")) changes.dueDate = editDueDate || null;
 
     if (Object.keys(changes).length > 0) {
+      setIsSaving(true);
       onUpdateCard?.(card.id, changes);
+      // Keep editing mode until parent re-renders with updated card (or timeout)
+      setTimeout(() => {
+        setIsSaving(false);
+        setIsEditing(false);
+      }, 500);
+    } else {
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
 
   const handleCancel = () => {
@@ -147,7 +143,9 @@ export function CardDetailPanel({
             <div className="flex gap-2">
               {isEditing ? (
                 <>
-                  <Button size="sm" onClick={handleSave}><Save className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                    <Save className="mr-1 h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Save"}
+                  </Button>
                   <Button size="sm" variant="outline" onClick={handleCancel}>Cancel</Button>
                 </>
               ) : (

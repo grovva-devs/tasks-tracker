@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,14 @@ export function EditBoardModal({ board, onUpdate }: EditBoardModalProps) {
   const [description, setDescription] = useState(board.description ?? "");
   const [clientName, setClientName] = useState(board.clientName);
   const [clientEmail, setClientEmail] = useState(board.clientEmail ?? "");
+
+  // Sync state when board prop changes (e.g., after update)
+  useEffect(() => {
+    setTitle(board.title);
+    setDescription(board.description ?? "");
+    setClientName(board.clientName);
+    setClientEmail(board.clientEmail ?? "");
+  }, [board.id, board.title, board.description, board.clientName, board.clientEmail]);
 
   const handleSave = () => {
     const changes: Record<string, string> = {};

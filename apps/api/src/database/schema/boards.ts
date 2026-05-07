@@ -29,6 +29,8 @@ export const boards = pgTable(
       .notNull()
       .references(() => users.id),
     position: integer("position").notNull().default(0),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    archivedBy: uuid("archived_by"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     deletedBy: uuid("deleted_by"),
     createdAt: timestamp("created_at", { withTimezone: true })

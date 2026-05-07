@@ -135,12 +135,13 @@ export class BoardsService {
         clientName: boards.clientName, clientEmail: boards.clientEmail,
         status: boards.status, templateId: boards.templateId,
         createdBy: boards.createdBy, position: boards.position,
+        deletedAt: boards.deletedAt,
         createdAt: boards.createdAt, updatedAt: boards.updatedAt,
       })
       .from(boards)
       .where(eq(boards.id, id))
       .limit(1);
-    if (!board) throw new NotFoundException("Board not found");
+    if (!board || board.deletedAt) throw new NotFoundException("Board not found");
 
     // Fetch lists with their cards
     const boardLists = await db
@@ -330,7 +331,12 @@ export class BoardsService {
   }
 
   async archive(id: string, userId: string) {
-    return this.update(id, { status: "archived", updatedAt: new Date() });
+    return this.update(id, {
+      status: "archived",
+      archivedAt: new Date(),
+      archivedBy: userId,
+      updatedAt: new Date(),
+    });
   }
 
   async softDelete(id: string, userId: string) {

@@ -32,7 +32,6 @@ export function BoardActionsMenu({ boardId, boardTitle, onArchive, onDelete }: B
   const [action, setAction] = useState<"archive" | "delete" | null>(null);
 
   const handleArchive = () => {
-    setAction("archive");
     onArchive();
     setConfirmOpen(false);
   };
@@ -87,7 +86,8 @@ export function BoardActionsMenu({ boardId, boardTitle, onArchive, onDelete }: B
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  This will permanently delete <strong>{boardTitle}</strong>.
+                  This will archive and hide <strong>{boardTitle}</strong>.
+                  Only admins can restore it later.
                   Type the board title below to confirm:
                 </p>
                 <Input

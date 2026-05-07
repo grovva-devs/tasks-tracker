@@ -30,9 +30,7 @@
     "phase": "idle",
     "testFiles": [],
     "sourceFiles": [
-      "apps/web/src/components/template/category-manager.tsx",
-      "apps/web/src/app/(dashboard)/templates/page.tsx",
-      "apps/web/src/app/(dashboard)/profile/page.tsx"
+      "apps/web/src/components/layout/sidebar.tsx"
     ],
     "redVerificationPending": false
   },
